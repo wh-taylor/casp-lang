@@ -2,8 +2,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing_extensions import List
 
+# Returns a comma-separated string of datatypes in a list
 def ts_repr(ts: List[DataType]) -> str:
     return ', '.join([repr(t) for t in ts])
+
+# Singleton types
 
 class IntType:
     def __repr__(self) -> str:
@@ -24,6 +27,8 @@ class StringType:
 class CharType:
     def __repr__(self) -> str:
         return 'char'
+    
+# Product types; types with types in them
     
 @dataclass
 class FunctionType:
