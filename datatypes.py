@@ -55,4 +55,8 @@ class NewType:
     def __repr__(self) -> str:
         return self.name
 
-DataType = IntType | FloatType | BoolType | StringType | CharType | FunctionType | ArrayType | VectorType | NewType
+DataType \
+    = IntType | FloatType | BoolType \
+    | StringType | CharType \
+    | FunctionType | ArrayType | VectorType \
+    | NewType
