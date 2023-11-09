@@ -1,5 +1,6 @@
 from datatypes import *
 from typing_extensions import List
+from nodes import IdentifierNode, ExpressionNode
 
 # Error class
 class InterpreterValueError(Exception):
@@ -39,6 +40,10 @@ class CharValue(Value):
             raise InterpreterValueError('char value must contain only one character')
         super().__init__(raw_char, CharType())
 
+class FunctionValue(Value):
+    def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode, input_datatype: DataType, output_datatype: DataType):
+        super().__init__(FunctionObject(input_identifier_node, expression_node), FunctionType(input_datatype, output_datatype))
+
 class ArrayValue(Value):
     def __init__(self, raw_values: List[Value], datatype: DataType):
         super().__init__(raw_values, ArrayType(datatype))
@@ -63,3 +68,9 @@ class VectorValue(Value):
                 raise InterpreterValueError(f'value had type {actual_datatype} when {expected_datatype} was expected')
         
         super().__init__(raw_values, VectorType(datatypes))
+
+
+class FunctionObject:
+    def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode):
+        self.input_node = input_identifier_node
+        self.output_node = expression_node
