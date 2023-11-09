@@ -48,4 +48,11 @@ class VectorType:
     def __repr__(self) -> str:
         return f'({ts_repr(self.ts)})'
 
-DataType = IntType | FloatType | BoolType | StringType | CharType | FunctionType | ArrayType | VectorType
+@dataclass
+class NewType:
+    name: str
+
+    def __repr__(self) -> str:
+        return self.name
+
+DataType = IntType | FloatType | BoolType | StringType | CharType | FunctionType | ArrayType | VectorType | NewType
