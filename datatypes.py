@@ -8,6 +8,10 @@ def ts_repr(ts: List[DataType]) -> str:
 
 # Singleton types
 
+class NullType:
+    def __repr__(self) -> str:
+        return 'null'
+
 class IntType:
     def __repr__(self) -> str:
         return 'int'

@@ -34,6 +34,10 @@ class FunctionObject:
 
 # Value subclasses
 
+class NullValue(Value):
+    def __init__(self):
+        super().__init__(None, NullType())
+
 class IntValue(Value):
     def __init__(self, raw_int: int):
         super().__init__(raw_int, IntType())
