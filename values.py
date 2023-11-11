@@ -15,6 +15,23 @@ class Value:
     def get_datatype(self):
         return self.datatype
 
+# Value objects    
+
+class StructMemberObject:
+    def __init__(self, identifier: IdentifierNode, datatype: DataType, value: Value):
+        self.identifier = identifier
+        self.datatype = datatype
+        self.value = value
+
+class StructObject:
+    def __init__(self, members: List[StructMemberObject]):
+        self.members = members
+
+class FunctionObject:
+    def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode):
+        self.input_node = input_identifier_node
+        self.output_node = expression_node
+
 # Value subclasses
 
 class IntValue(Value):
@@ -69,8 +86,6 @@ class VectorValue(Value):
         
         super().__init__(raw_values, VectorType(datatypes))
 
-
-class FunctionObject:
-    def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode):
-        self.input_node = input_identifier_node
-        self.output_node = expression_node
+class StructValue(Value):
+    def __init__(self, members: List[StructMemberObject], struct_type: DataType):
+        super().__init__(StructObject(members), struct_type)
