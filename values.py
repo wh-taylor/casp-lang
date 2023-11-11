@@ -28,9 +28,11 @@ class StructObject:
         self.members = members
 
 class FunctionObject:
-    def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode):
+    def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode, input_datatype: DataType, output_datatype: DataType):
         self.input_node = input_identifier_node
         self.output_node = expression_node
+        self.input_datatype = input_datatype
+        self.output_datatype = output_datatype
 
 # Value subclasses
 
@@ -63,7 +65,7 @@ class CharValue(Value):
 
 class FunctionValue(Value):
     def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode, input_datatype: DataType, output_datatype: DataType):
-        super().__init__(FunctionObject(input_identifier_node, expression_node), FunctionType(input_datatype, output_datatype))
+        super().__init__(FunctionObject(input_identifier_node, expression_node, input_datatype, output_datatype), FunctionType(input_datatype, output_datatype))
 
 class ArrayValue(Value):
     def __init__(self, raw_values: List[Value], datatype: DataType):
