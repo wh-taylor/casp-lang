@@ -194,9 +194,8 @@ class Lexer:
         elif self.chars_match('\\\''):
             self.iterate(2)
             return '\''
-        elif self.chars_match('\\'):
-            self.iterate()
-            return '\\'
+        self.iterate()
+        return '\\'
 
 def lex(file: str, code: str) -> List[Token]:
     return Lexer(file, code).lex()
