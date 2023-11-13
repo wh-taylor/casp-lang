@@ -1,5 +1,6 @@
 from typing_extensions import List
 from tokens import *
+from context import ContextualError
 
 LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
 DIGITS = '0123456789'
