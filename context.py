@@ -4,6 +4,9 @@ class Context:
         self._code = code
         self._init_index = init_index
         self._final_index = final_index
+
+    def __repr__(self) -> str:
+        return f'{self._file}:{self._init_index}-{self._final_index}:{self._code[self._init_index:self._final_index+1]}'
     
     def _get_line(self) -> int:
         return self._code[:self._init_index].count('\n')
