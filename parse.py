@@ -19,33 +19,51 @@ class Parser:
         return self.parse_expression()
     
     def parse_expression(self) -> ExpressionNode:
-        return self.parse_addition_and_subtraction()
+        return self.parse_multiplication_and_division()
     
-    def parse_addition_and_subtraction(self):
+    def parse_multiplication_and_division(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_addition_and_subtraction
+        left_node = parse_subprecedence()
+        while self.is_index_valid():
+            if self.get_token().matches(SymbolToken, "*"):
+                self.iterate()
+                right_node = parse_subprecedence()
+                left_node = MultiplicationNode(left_node, right_node, left_node.context + right_node.context)
+            elif self.get_token().matches(SymbolToken, "/"):
+                self.iterate()
+                right_node = parse_subprecedence()
+                left_node = DivisionNode(left_node, right_node, left_node.context + right_node.context)
+            else:
+                break
+        return left_node
+    
+    def parse_addition_and_subtraction(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_function_application
         left_node = self.parse_function_application()
         while self.is_index_valid():
             if self.get_token().matches(SymbolToken, "+"):
                 self.iterate()
-                right_node = self.parse_function_application()
+                right_node = parse_subprecedence()
                 left_node = AdditionNode(left_node, right_node, left_node.context + right_node.context)
             elif self.get_token().matches(SymbolToken, "-"):
                 self.iterate()
-                right_node = self.parse_function_application()
+                right_node = parse_subprecedence()
                 left_node = SubtractionNode(left_node, right_node, left_node.context + right_node.context)
             else:
                 break
         return left_node
     
     def parse_function_application(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_atom
         token = self.get_token()
-        if type(token) != IdentifierToken: return self.parse_factor()
+        if type(token) != IdentifierToken: return parse_subprecedence()
         self.iterate()
         if not self.is_index_valid() or not self.get_token().matches(SymbolToken, '('):
             return IdentifierNode(token.text, token.context)
         expr = self.parse_expression()
         return FunctionApplicationNode(IdentifierNode(token.text, token.context), expr, token.context + expr.context)
     
-    def parse_factor(self) -> ExpressionNode:
+    def parse_atom(self) -> ExpressionNode:
         token = self.get_token()
         self.iterate()
 
