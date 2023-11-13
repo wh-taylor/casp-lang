@@ -371,10 +371,8 @@ class BreakNode(StatementNode):
         self.node = node
 
 class ContinueNode(StatementNode):
-    def __init__(self, node: ExpressionNode, context: Context):
+    def __init__(self, context: Context):
         super().__init__(context)
-
-        self.node = node
 
 # Block expressions
 
