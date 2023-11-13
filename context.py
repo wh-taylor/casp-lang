@@ -34,3 +34,11 @@ class Context:
         l2 = ' ' * int(len(str(line))) + ' | ' + ' ' * (self._get_init_column() - 1) + char * self._get_context_width()
 
         return l0 + '\n' + l1 + '\n' + l2
+
+class ContextualError(Exception):
+    def __init__(self, message: str, context: Context):
+        super().__init__(message)
+        self._context = context
+
+    def get_context(self):
+        return self._context
