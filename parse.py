@@ -19,10 +19,26 @@ class Parser:
         return self.parse_expression()
     
     def parse_expression(self) -> ExpressionNode:
-        return self.parse_multiplication_and_division()
+        return self.parse_addition_and_subtraction()
+    
+    def parse_addition_and_subtraction(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_multiplication_and_division
+        left_node = parse_subprecedence()
+        while self.is_index_valid():
+            if self.get_token().matches(SymbolToken, "+"):
+                self.iterate()
+                right_node = parse_subprecedence()
+                left_node = AdditionNode(left_node, right_node, left_node.context + right_node.context)
+            elif self.get_token().matches(SymbolToken, "-"):
+                self.iterate()
+                right_node = parse_subprecedence()
+                left_node = SubtractionNode(left_node, right_node, left_node.context + right_node.context)
+            else:
+                break
+        return left_node
     
     def parse_multiplication_and_division(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_addition_and_subtraction
+        parse_subprecedence = self.parse_function_application
         left_node = parse_subprecedence()
         while self.is_index_valid():
             if self.get_token().matches(SymbolToken, "*"):
@@ -33,22 +49,6 @@ class Parser:
                 self.iterate()
                 right_node = parse_subprecedence()
                 left_node = DivisionNode(left_node, right_node, left_node.context + right_node.context)
-            else:
-                break
-        return left_node
-    
-    def parse_addition_and_subtraction(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_function_application
-        left_node = self.parse_function_application()
-        while self.is_index_valid():
-            if self.get_token().matches(SymbolToken, "+"):
-                self.iterate()
-                right_node = parse_subprecedence()
-                left_node = AdditionNode(left_node, right_node, left_node.context + right_node.context)
-            elif self.get_token().matches(SymbolToken, "-"):
-                self.iterate()
-                right_node = parse_subprecedence()
-                left_node = SubtractionNode(left_node, right_node, left_node.context + right_node.context)
             else:
                 break
         return left_node
