@@ -8,6 +8,9 @@ class Token:
 
     def __repr__(self) -> str:
         return f'{self.text}: {self.tokentype}'
+    
+    def matches(self, tokentype: type, text: str):
+        return type(self) == tokentype and self.text == text
 
 class IdentifierToken(Token):
     def __init__(self, text: str, context: Context):
