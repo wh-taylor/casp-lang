@@ -17,7 +17,7 @@ class Parser:
         self.index += 1
 
     def parse(self) -> Node:
-        return self.parse_statement()
+        return self.parse_item()
     
     def parse_item(self) -> ItemNode:
         parse_subprecedence = self.parse_function_definition
