@@ -19,7 +19,16 @@ class Parser:
         return self.parse_expression()
     
     def parse_expression(self) -> ExpressionNode:
-        return self.parse_factor()
+        return self.parse_function_call()
+    
+    def parse_function_call(self) -> ExpressionNode:
+        token = self.get_token()
+        if type(token) != IdentifierToken: return self.parse_factor()
+        self.iterate()
+        if not self.get_token().matches(SymbolToken, '('):
+            return IdentifierNode(token.text, token.context)
+        expr = self.parse_expression()
+        return FunctionApplicationNode(token, expr, token.context + expr.context)
     
     def parse_factor(self) -> ExpressionNode:
         token = self.get_token()
@@ -32,13 +41,10 @@ class Parser:
             return LiteralNode(FloatValue(float(token.text)), token.context)
         
         if type(token) == StringToken:
-            return LiteralNode(StringValue(float(token.text)), token.context)
+            return LiteralNode(StringValue(token.text), token.context)
         
         if type(token) == CharToken:
-            return LiteralNode(CharValue(float(token.text)), token.context)
-        
-        if type(token) == IdentifierToken:
-            return IdentifierNode(token.text, token.context)
+            return LiteralNode(CharValue(token.text), token.context)
         
         if token.matches(SymbolToken, '('):
             expr = self.parse_expression()
