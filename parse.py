@@ -19,16 +19,31 @@ class Parser:
         return self.parse_expression()
     
     def parse_expression(self) -> ExpressionNode:
-        return self.parse_function_call()
+        return self.parse_addition_and_subtraction()
     
-    def parse_function_call(self) -> ExpressionNode:
+    def parse_addition_and_subtraction(self):
+        left_node = self.parse_function_application()
+        while self.is_index_valid():
+            if self.get_token().matches(SymbolToken, "+"):
+                self.iterate()
+                right_node = self.parse_function_application()
+                left_node = AdditionNode(left_node, right_node, left_node.context + right_node.context)
+            elif self.get_token().matches(SymbolToken, "-"):
+                self.iterate()
+                right_node = self.parse_function_application()
+                left_node = SubtractionNode(left_node, right_node, left_node.context + right_node.context)
+            else:
+                break
+        return left_node
+    
+    def parse_function_application(self) -> ExpressionNode:
         token = self.get_token()
         if type(token) != IdentifierToken: return self.parse_factor()
         self.iterate()
-        if not self.get_token().matches(SymbolToken, '('):
+        if not self.is_index_valid() or not self.get_token().matches(SymbolToken, '('):
             return IdentifierNode(token.text, token.context)
         expr = self.parse_expression()
-        return FunctionApplicationNode(token, expr, token.context + expr.context)
+        return FunctionApplicationNode(IdentifierNode(token.text, token.context), expr, token.context + expr.context)
     
     def parse_factor(self) -> ExpressionNode:
         token = self.get_token()
