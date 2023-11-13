@@ -12,41 +12,44 @@ class Token:
     def _matches(self, tokentype: type, text: str) -> bool:
         return type(self) == tokentype and self.text == text
     
+    def _is_symbol(self, symbol: str):
+        return self._matches(SymbolToken, symbol)
+    
     def is_semicolon(self):
-        return self._matches(SymbolToken, ';')
+        return self._is_symbol(';')
     
     def is_left_paren(self):
-        return self._matches(SymbolToken, '(')
+        return self._is_symbol('(')
     
     def is_right_paren(self):
-        return self._matches(SymbolToken, ')')
+        return self._is_symbol(')')
     
     def is_eq(self):
-        return self._matches(SymbolToken, '=')
+        return self._is_symbol('=')
     
     def is_add(self):
-        return self._matches(SymbolToken, '+')
+        return self._is_symbol('+')
     
     def is_sub(self):
-        return self._matches(SymbolToken, '-')
+        return self._is_symbol('-')
     
     def is_mul(self):
-        return self._matches(SymbolToken, '*')
+        return self._is_symbol('*')
     
     def is_div(self):
-        return self._matches(SymbolToken, '/')
+        return self._is_symbol('/')
     
     def is_return(self):
-        return self._matches(SymbolToken, 'return')
+        return self._is_symbol('return')
     
     def is_break(self):
-        return self._matches(SymbolToken, 'break')
+        return self._is_symbol('break')
     
     def is_continue(self):
-        return self._matches(SymbolToken, 'continue')
+        return self._is_symbol('continue')
     
     def is_let(self):
-        return self._matches(SymbolToken, 'let')
+        return self._is_symbol('let')
     
 class EOFToken(Token):
     def __init__(self, context: Context):
