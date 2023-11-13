@@ -468,6 +468,9 @@ class BlockExpressionNode(ExpressionNode):
                 return False
         return self.expression == other.expression
     
+    def __repr__(self) -> str:
+        return '{ ' + '; '.join([repr(s) for s in self.statements + [self.expression]]) + ' }'
+    
     def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
@@ -555,6 +558,9 @@ class FunctionDefinitionNode(ItemNode):
             return False
         return self.function_name == other.function_name and self.parameter_identifier == other.parameter_identifier and self.block_node == other.block_node
     
+    def __repr__(self):
+        return f'fn {self.function_name} ({self.parameter_identifier}: {self.input_datatype}) -> {self.output_datatype} {self.block_node}'
+
     def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
