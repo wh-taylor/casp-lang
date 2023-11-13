@@ -19,11 +19,38 @@ class Parser:
     def parse(self) -> Node:
         return self.parse_statement()
     
+    def parse_item(self) -> ItemNode:
+        parse_subprecedence = self.parse_function_definition
+        return parse_subprecedence()
+
+    def parse_function_definition(self) -> ItemNode:
+        parse_subprecedence = None
+        token = self.get_token()
+        if not token.is_fn():
+            raise ContextualError('expected fn', token.context)
+        self.iterate()
+        function_name = self.parse_identifier()
+
+        # Parse parameter `(parameter: datatype)`
+        self.expect_symbol('(')
+        self.iterate()
+        parameter_name = self.parse_identifier()
+        self.expect_symbol(':')
+        self.iterate()
+        parameter_datatype_name = self.parse_expression()
+        self.expect_symbol(')')
+        self.iterate()
+        self.expect_symbol('->')
+        self.iterate()
+        return_datatype_name = self.parse_expression()
+
+        block = self.parse_block()
+
+        return FunctionDefinitionNode(function_name, parameter_name, block, parameter_datatype_name, return_datatype_name, function_name.context + block.context)
+    
     def parse_statement(self) -> StatementNode:
         parse_subprecedence = self.parse_return
         statement = parse_subprecedence()
-        self.expect_symbol(';')
-        self.iterate()
         return statement
     
     def parse_return(self) -> StatementNode:
@@ -77,6 +104,29 @@ class Parser:
             raise ContextualError('expected identifier', left_node.context)
         return VariableReassignmentNode(left_node, right_node, left_node.context + right_node.context)
     
+    def parse_block(self) -> BlockExpressionNode:
+        init_context = self.get_token().context
+        self.expect_symbol('{')
+        self.iterate()
+        statements: List[StatementNode] = []
+        expression: Optional[ExpressionNode] = None
+        while not self.get_token().is_right_brace():
+            statement = self.parse_statement()
+            self.expect_symbol('}', ';')
+            if self.get_token().is_semicolon():
+                self.iterate()
+                statements.append(statement)
+            elif self.get_token().is_right_brace():
+                if not isinstance(statement, ExpressionNode):
+                    raise ContextualError('expected an expression, found a statement', statement.context)
+                expression = statement
+                break
+
+        self.expect_symbol('}')
+        final_context = self.get_token().context
+        self.iterate()
+        return BlockExpressionNode(statements, expression, init_context + final_context)
+
     def parse_expression(self) -> ExpressionNode:
         return self.parse_addition_and_subtraction()
     
