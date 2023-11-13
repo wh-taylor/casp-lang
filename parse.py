@@ -17,7 +17,65 @@ class Parser:
         self.index += 1
 
     def parse(self) -> Node:
-        return self.parse_expression()
+        return self.parse_statement()
+    
+    def parse_statement(self) -> StatementNode:
+        parse_subprecedence = self.parse_return
+        statement = parse_subprecedence()
+        self.expect_symbol(';')
+        self.iterate()
+        return statement
+    
+    def parse_return(self) -> StatementNode:
+        parse_subprecedence = self.parse_break
+        token = self.get_token()
+        if not token.matches(SymbolToken, 'return'): return parse_subprecedence()
+        self.iterate()
+        if self.get_token().matches(SymbolToken, ';'):
+            return ReturnNode(NullNode(token.context), token.context)
+        expression = self.parse_expression()
+        return ReturnNode(expression, token.context + expression.context)
+
+    def parse_break(self) -> StatementNode:
+        parse_subprecedence = self.parse_continue
+        token = self.get_token()
+        if not token.matches(SymbolToken, 'break'): return parse_subprecedence()
+        self.iterate()
+        if self.get_token().matches(SymbolToken, ';'):
+            return BreakNode(NullNode(token.context), token.context)
+        expression = self.parse_expression()
+        return BreakNode(expression, token.context + expression.context)
+
+    def parse_continue(self) -> StatementNode:
+        parse_subprecedence = self.parse_variable_declaration
+        token = self.get_token()
+        if not token.matches(SymbolToken, 'continue'): return parse_subprecedence()
+        self.iterate()
+        return ContinueNode(token.context)
+    
+    def parse_variable_declaration(self) -> StatementNode:
+        parse_subprecedence = self.parse_variable_reassignment
+        if not self.get_token().matches(SymbolToken, 'let'): return parse_subprecedence()
+        self.iterate()
+        identifier = self.parse_identifier()
+        self.expect_symbol(':')
+        self.iterate()
+        datatype = self.parse_expression()
+        self.expect_symbol('=')
+        self.iterate()
+        expression = self.parse_expression()
+        return VariableDeclarationNode(identifier, datatype, expression, identifier.context + datatype.context + expression.context)
+
+    def parse_variable_reassignment(self) -> StatementNode:
+        parse_subprecedence = self.parse_expression
+        left_node = parse_subprecedence()
+        if not self.get_token().matches(SymbolToken, '='):
+            return left_node
+        self.iterate()
+        right_node = self.parse_expression()
+        if type(left_node) != IdentifierNode:
+            raise ContextualError('expected identifier', left_node.context)
+        return VariableReassignmentNode(left_node, right_node, left_node.context + right_node.context)
     
     def parse_expression(self) -> ExpressionNode:
         return self.parse_addition_and_subtraction()
@@ -90,6 +148,13 @@ class Parser:
             return expr
         
         raise ContextualError('unhandled token', token.context)
+
+    def parse_identifier(self):
+        token = self.get_token()
+        self.iterate()
+        if type(token) != IdentifierToken:
+            raise ContextualError('expected identifier', token.context)
+        return IdentifierNode(token.text, token.context)
     
     def expect_symbol(self, *symbols: str):
         for symbol in symbols:

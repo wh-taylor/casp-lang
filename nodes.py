@@ -340,7 +340,7 @@ class TypeCastNode(ExpressionNode):
 # Variables
 
 class VariableDeclarationNode(ExpressionNode):
-    def __init__(self, identifier: IdentifierNode, datatype: DataType, expression: ExpressionNode, context: Context):
+    def __init__(self, identifier: IdentifierNode, datatype: ExpressionNode, expression: ExpressionNode, context: Context):
         super().__init__(context)
         
         self.identifier = identifier
@@ -368,15 +368,24 @@ class ReturnNode(StatementNode):
 
         self.node = node
 
+    def __repr__(self) -> str:
+        return f'return {self.node}'
+
 class BreakNode(StatementNode):
     def __init__(self, node: ExpressionNode, context: Context):
         super().__init__(context)
 
         self.node = node
 
+    def __repr__(self) -> str:
+        return f'break {self.node}'
+
 class ContinueNode(StatementNode):
     def __init__(self, context: Context):
         super().__init__(context)
+
+    def __repr__(self) -> str:
+        return 'continue'
 
 # Block expressions
 
