@@ -9,8 +9,44 @@ class Token:
     def __repr__(self) -> str:
         return f'{self.text}: {self.tokentype}'
     
-    def matches(self, tokentype: type, text: str) -> bool:
+    def _matches(self, tokentype: type, text: str) -> bool:
         return type(self) == tokentype and self.text == text
+    
+    def is_semicolon(self):
+        return self._matches(SymbolToken, ';')
+    
+    def is_left_paren(self):
+        return self._matches(SymbolToken, '(')
+    
+    def is_right_paren(self):
+        return self._matches(SymbolToken, ')')
+    
+    def is_eq(self):
+        return self._matches(SymbolToken, '=')
+    
+    def is_add(self):
+        return self._matches(SymbolToken, '+')
+    
+    def is_sub(self):
+        return self._matches(SymbolToken, '-')
+    
+    def is_mul(self):
+        return self._matches(SymbolToken, '*')
+    
+    def is_div(self):
+        return self._matches(SymbolToken, '/')
+    
+    def is_return(self):
+        return self._matches(SymbolToken, 'return')
+    
+    def is_break(self):
+        return self._matches(SymbolToken, 'break')
+    
+    def is_continue(self):
+        return self._matches(SymbolToken, 'continue')
+    
+    def is_let(self):
+        return self._matches(SymbolToken, 'let')
     
 class EOFToken(Token):
     def __init__(self, context: Context):
