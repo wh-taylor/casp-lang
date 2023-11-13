@@ -11,8 +11,11 @@ class Value:
         self.value = value
         self.datatype = datatype
 
-    def get_datatype(self):
+    def get_datatype(self) -> DataType:
         return self.datatype
+    
+    def __repr__(self) -> str:
+        return repr(self.value)
 
 # Value objects    
 
@@ -54,6 +57,9 @@ class BoolValue(Value):
 class StringValue(Value):
     def __init__(self, raw_str: str):
         super().__init__(raw_str, StringType())
+
+    def __repr__(self) -> str:
+        return f'"{self.value}"'
 
 class CharValue(Value):
     def __init__(self, raw_char: str):
@@ -125,6 +131,9 @@ class LiteralNode(ExpressionNode):
 
         self.value = value
 
+    def __repr__(self) -> str:
+        return repr(self.value)
+
 
 class IntNode(LiteralNode):
     def __init__(self, value: IntValue, context: Context):
@@ -161,6 +170,9 @@ class IdentifierNode(ExpressionNode):
 
         self.identifier = identifier
 
+    def __repr__(self) -> str:
+        return self.identifier
+
 # Operation nodes
 
 # Binary operators
@@ -172,30 +184,48 @@ class BinaryOperatorNode(ExpressionNode):
         self.left_node = left_node
         self.right_node = right_node
 
+    def __repr__(self, operator: str) -> str:
+        return f'{self.left_node} {operator} {self.right_node}'
+
 # x + y
 class AdditionNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
+
+    def __repr__(self) -> str:
+        return super().__repr__('+')
 
 # x - y
 class SubtractionNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
 
+    def __repr__(self) -> str:
+        return super().__repr__('-')
+
 # x * y
 class MultiplicationNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
 
+    def __repr__(self) -> str:
+        return super().__repr__('*')
+
 # x / y
-class DivisonNode(BinaryOperatorNode):
+class DivisionNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
+
+    def __repr__(self) -> str:
+        return super().__repr__('/')
 
 # x % y
 class ModulusNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
+
+    def __repr__(self) -> str:
+        return super().__repr__('%')
 
 # Logical Binary Operators
 
@@ -204,10 +234,16 @@ class AndNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
 
+    def __repr__(self) -> str:
+        return super().__repr__('and')
+
 # x or y
 class OrNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
+
+    def __repr__(self) -> str:
+        return super().__repr__('or')
 
 # Relational Binary Operators
 
@@ -216,30 +252,48 @@ class EqualToNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
 
+    def __repr__(self) -> str:
+        return super().__repr__('==')
+
 # x != y
 class NotEqualToNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
+
+    def __repr__(self) -> str:
+        return super().__repr__('!=')
 
 # x < y
 class LessThanNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
 
+    def __repr__(self) -> str:
+        return super().__repr__('<')
+
 # x > y
 class GreaterThanNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
+
+    def __repr__(self) -> str:
+        return super().__repr__('>')
 
 # x <= y
 class LessThanOrEqualToNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
 
+    def __repr__(self) -> str:
+        return super().__repr__('<=')
+
 # x >= y
 class GreaterThanOrEqualToNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
         super().__init__(left_node, right_node, context)
+
+    def __repr__(self) -> str:
+        return super().__repr__('>=')
 
 # Function application
 
@@ -247,6 +301,9 @@ class GreaterThanOrEqualToNode(BinaryOperatorNode):
 class FunctionApplicationNode(BinaryOperatorNode):
     def __init__(self, function_node: ExpressionNode, input_node: ExpressionNode, context: Context):
         super().__init__(function_node, input_node, context)
+
+    def __repr__(self) -> str:
+        return f'{self.left_node}({self.right_node})'
         
 # Unary Operators
 
