@@ -119,7 +119,7 @@ class Node:
     def __eq__(self, _: object):
         return NotImplemented
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return self
@@ -220,7 +220,7 @@ class BinaryOperatorNode(ExpressionNode):
             return False
         return self.left_node == other.left_node and self.right_node == other.right_node and self.operator == other.operator
 
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return BinaryOperatorNode(
@@ -329,7 +329,7 @@ class UnaryOperatorNode(ExpressionNode):
             return False
         return self.node == other.node and self.operator == other.operator
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return UnaryOperatorNode(
@@ -365,7 +365,7 @@ class VariableDeclarationNode(ExpressionNode):
             return False
         return self.identifier == other.identifier and self.datatype == other.datatype and self.expression == other.expression
 
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return VariableDeclarationNode(
@@ -389,7 +389,7 @@ class VariableReassignmentNode(ExpressionNode):
             return False
         return self.identifier == other.identifier and self.expression == other.expression
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return VariableReassignmentNode(
@@ -413,7 +413,7 @@ class ReturnNode(StatementNode):
             return False
         return self.node == other.node
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return ReturnNode(
@@ -434,7 +434,7 @@ class BreakNode(StatementNode):
             return False
         return self.node == other.node
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return BreakNode(
@@ -468,7 +468,7 @@ class BlockExpressionNode(ExpressionNode):
                 return False
         return self.expression == other.expression
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return BlockExpressionNode(
@@ -489,7 +489,7 @@ class IfExpressionNode(ExpressionNode):
             return False
         return self.condition == other.condition and self.block == other.block and self.elseblock == other.elseblock
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return IfExpressionNode(
@@ -510,7 +510,7 @@ class WhileExpressionNode(ExpressionNode):
             return False
         return self.condition == other.condition and self.block == other.block
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return IfExpressionNode(
@@ -529,7 +529,7 @@ class LoopExpressionNode(ExpressionNode):
             return False
         return self.block == other.block
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return IfExpressionNode(
@@ -543,7 +543,7 @@ class ItemNode(Node):
         super().__init__(context)
 
 class FunctionDefinitionNode(ItemNode):
-    def __init__(self, function_name: IdentifierNode, parameter_identifier: List[IdentifierNode], block_node: BlockExpressionNode, input_datatype: ExpressionNode, output_datatype: ExpressionNode):
+    def __init__(self, function_name: IdentifierNode, parameter_identifier: List[IdentifierNode], block_node: BlockExpressionNode, input_datatype: ExpressionNode, output_datatype: ExpressionNode, context: Context):
         self.function_name = function_name
         self.parameter_identifier = parameter_identifier
         self.block_node = block_node
@@ -555,7 +555,7 @@ class FunctionDefinitionNode(ItemNode):
             return False
         return self.function_name == other.function_name and self.parameter_identifier == other.parameter_identifier and self.block_node == other.block_node
     
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return IfExpressionNode(
@@ -567,8 +567,9 @@ class FunctionDefinitionNode(ItemNode):
 # Head
 
 class HeadNode(Node):
-    def __init__(self, item_nodes: List[ItemNode]):
+    def __init__(self, item_nodes: List[ItemNode], context: Context):
         self.item_nodes = item_nodes
+        self.context = context
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, HeadNode):
@@ -578,9 +579,9 @@ class HeadNode(Node):
                 return False
         return True
 
-    def sub(self, old_node: Node, new_node: Node) -> Node:
+    def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
-        return BlockExpressionNode(
+        return HeadNode(
             [item_node.sub(old_node, new_node) for item_node in self.item_nodes],
             self.context)
