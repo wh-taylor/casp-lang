@@ -542,14 +542,16 @@ class ItemNode(Node):
     def __init__(self, context: Context):
         super().__init__(context)
 
-class FunctionDefinition(ItemNode):
-    def __init__(self, function_name: IdentifierNode, parameter_identifier: List[IdentifierNode], block_node: BlockExpressionNode):
+class FunctionDefinitionNode(ItemNode):
+    def __init__(self, function_name: IdentifierNode, parameter_identifier: List[IdentifierNode], block_node: BlockExpressionNode, input_datatype: ExpressionNode, output_datatype: ExpressionNode):
         self.function_name = function_name
         self.parameter_identifier = parameter_identifier
         self.block_node = block_node
+        self.input_datatype = input_datatype
+        self.output_datatype = output_datatype
 
     def __eq__(self, other: object):
-        if not isinstance(other, FunctionDefinition):
+        if not isinstance(other, FunctionDefinitionNode):
             return False
         return self.function_name == other.function_name and self.parameter_identifier == other.parameter_identifier and self.block_node == other.block_node
     
@@ -560,4 +562,25 @@ class FunctionDefinition(ItemNode):
             self.function_name.sub(old_node, new_node),
             self.parameter_identifier.sub(old_node, new_node),
             self.block_node.sub(old_node, new_node),
+            self.context)
+    
+# Head
+
+class HeadNode(Node):
+    def __init__(self, item_nodes: List[ItemNode]):
+        self.item_nodes = item_nodes
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, HeadNode):
+            return False
+        for i in range(len(self.item_nodes)):
+            if self.item_nodes[i] != other.item_nodes[i]:
+                return False
+        return True
+
+    def sub(self, old_node: Node, new_node: Node) -> Node:
+        if self == old_node:
+            return new_node
+        return BlockExpressionNode(
+            [item_node.sub(old_node, new_node) for item_node in self.item_nodes],
             self.context)
