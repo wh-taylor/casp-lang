@@ -87,5 +87,7 @@ class Parser:
             self.iterate()
             return expr
         
+        raise ContextualError('unhandled token', token.context)
+        
 def parse(tokens: List[Token]) -> Node:
     return Parser(tokens).parse()
