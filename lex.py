@@ -18,7 +18,7 @@ class LexerError(Exception):
 class Lexer:
     def __init__(self, file: str, code: str):
         self._file = file
-        self._code = code
+        self._code = code + '\n'
         self._index = 0
         self.tokens: List[Token] = []
 
