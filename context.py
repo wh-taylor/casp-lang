@@ -1,3 +1,5 @@
+from typing_extensions import Self
+
 class Context:
     def __init__(self, file: str, code: str, init_index: int, final_index: int):
         self._file = file
@@ -37,6 +39,13 @@ class Context:
         l2 = ' ' * int(len(str(line))) + ' | ' + ' ' * (self._get_init_column() - 1) + char * self._get_context_width()
 
         return l0 + '\n' + l1 + '\n' + l2
+    
+    def __add__(self, other: Self):
+        if self._file != other._file: raise ValueError(f'contexts do not share their files {self._file} and {other._file}')
+        if self._code != other._code: raise ValueError(f'contexts do not share their code {self._code} and {other._code}')
+        init_index = min(self._init_index, other._init_index)
+        final_index = max(self._final_index, other._final_index)
+        return Context(self._file, self._code, init_index, final_index)
 
 class ContextualError(Exception):
     def __init__(self, message: str, context: Context):
