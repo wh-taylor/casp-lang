@@ -13,6 +13,7 @@ class Parser:
         return self.index < len(self.tokens)
     
     def iterate(self):
+        if type(self.get_token()) == EOFToken: return
         self.index += 1
 
     def parse(self) -> Node:
