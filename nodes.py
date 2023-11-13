@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing_extensions import List, Optional
+from typing_extensions import List, Self, Optional
 from tokens import *
 from datatypes import *
 
@@ -16,6 +16,11 @@ class Value:
     
     def __repr__(self) -> str:
         return repr(self.value)
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Value):
+            return False
+        return self.value == other.value and self.datatype == other.datatype
 
 # Value objects    
 
@@ -111,6 +116,9 @@ class Node:
     def __init__(self, context: Context):
         self.context = context
 
+    def __eq__(self, _: object):
+        return NotImplemented
+
 # Base statement node
 
 class StatementNode(Node):
@@ -133,6 +141,11 @@ class LiteralNode(ExpressionNode):
 
     def __repr__(self) -> str:
         return repr(self.value)
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, LiteralNode):
+            return False
+        return self.value == other.value
 
 
 class NullNode(LiteralNode):
@@ -176,166 +189,141 @@ class IdentifierNode(ExpressionNode):
 
     def __repr__(self) -> str:
         return self.identifier
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, IdentifierNode):
+            return False
+        return self.identifier == other.identifier
 
 # Operation nodes
 
 # Binary operators
 
 class BinaryOperatorNode(ExpressionNode):
-    def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
+    def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, operator: str, context: Context):
         super().__init__(context)
 
         self.left_node = left_node
         self.right_node = right_node
+        self.operator = operator
 
-    def repr(self, operator: str) -> str:
-        return f'{self.left_node} {operator} {self.right_node}'
+    def __repr__(self) -> str:
+        return f'{self.left_node} {self.operator} {self.right_node}'
+    
+    def __eq__(self, other: object):
+        if not isinstance(other, BinaryOperatorNode):
+            return False
+        return self.left_node == other.left_node and self.right_node == other.right_node and self.operator == other.operator
 
 # x + y
 class AdditionNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('+')
+        super().__init__(left_node, right_node, '+', context)
 
 # x - y
 class SubtractionNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('-')
+        super().__init__(left_node, right_node, '-', context)
 
 # x * y
 class MultiplicationNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('*')
+        super().__init__(left_node, right_node, '*', context)
 
 # x / y
 class DivisionNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('/')
+        super().__init__(left_node, right_node, '/', context)
 
 # x % y
 class ModulusNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('%')
+        super().__init__(left_node, right_node, '%', context)
 
 # Logical Binary Operators
 
 # x and y
 class AndNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('and')
+        super().__init__(left_node, right_node, 'and', context)
 
 # x or y
 class OrNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('or')
+        super().__init__(left_node, right_node, 'or', context)
 
 # Relational Binary Operators
 
 # x == y
 class EqualToNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('==')
+        super().__init__(left_node, right_node, '==', context)
 
 # x != y
 class NotEqualToNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('!=')
+        super().__init__(left_node, right_node, '!=', context)
 
 # x < y
 class LessThanNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('<')
+        super().__init__(left_node, right_node, '<', context)
 
 # x > y
 class GreaterThanNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('>')
+        super().__init__(left_node, right_node, '>', context)
 
 # x <= y
 class LessThanOrEqualToNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('<=')
+        super().__init__(left_node, right_node, '<=', context)
 
 # x >= y
 class GreaterThanOrEqualToNode(BinaryOperatorNode):
     def __init__(self, left_node: ExpressionNode, right_node: ExpressionNode, context: Context):
-        super().__init__(left_node, right_node, context)
-
-    def __repr__(self) -> str:
-        return super().repr('>=')
+        super().__init__(left_node, right_node, '>=', context)
 
 # Function application
 
 # f x
 class FunctionApplicationNode(BinaryOperatorNode):
     def __init__(self, function_node: ExpressionNode, input_node: ExpressionNode, context: Context):
-        super().__init__(function_node, input_node, context)
+        super().__init__(function_node, input_node, '', context)
 
     def __repr__(self) -> str:
         return f'{self.left_node}({self.right_node})'
+    
+# Type cast node
+
+# x as t
+class TypeCastNode(BinaryOperatorNode):
+    def __init__(self, node: ExpressionNode, datatype: ExpressionNode, context: Context):
+        super().__init__(node, datatype, 'as', context)
         
 # Unary Operators
 
 class UnaryOperatorNode(ExpressionNode):
-    def __init__(self, node: ExpressionNode, context: Context):
+    def __init__(self, node: ExpressionNode, operator: str, context: Context):
         super().__init__(context)
 
         self.node = node
+        self.operator = operator
+
+    def __eq__(self, other: object):
+        if not isinstance(other, UnaryOperatorNode):
+            return False
+        return self.node == other.node and self.operator == other.operator
 
 # -x
 class NegativeNode(UnaryOperatorNode):
     def __init__(self, node: ExpressionNode, context: Context):
-        super().__init__(node, context)
+        super().__init__(node, '-', context)
 
 # not x
 class NotNode(UnaryOperatorNode):
     def __init__(self, node: ExpressionNode, context: Context):
-        super().__init__(node, context)
-
-# Type cast node
-
-# x as t
-class TypeCastNode(ExpressionNode):
-    def __init__(self, node: ExpressionNode, datatype: DataType, context: Context):
-        super().__init__(context)
-
-        self.node = node
-        self.datatype = datatype
+        super().__init__(node, 'not', context)
 
 # Variables
 
@@ -349,6 +337,11 @@ class VariableDeclarationNode(ExpressionNode):
 
     def __repr__(self) -> str:
         return f'let {self.identifier}: {self.datatype} = {self.expression}'
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, VariableDeclarationNode):
+            return False
+        return self.identifier == other.identifier and self.datatype == other.datatype and self.expression == other.expression
 
 class VariableReassignmentNode(ExpressionNode):
     def __init__(self, identifier: IdentifierNode, expression: ExpressionNode, context: Context):
@@ -359,6 +352,11 @@ class VariableReassignmentNode(ExpressionNode):
 
     def __repr__(self) -> str:
         return f'{self.identifier} = {self.expression}'
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, VariableReassignmentNode):
+            return False
+        return self.identifier == other.identifier and self.expression == other.expression
 
 # Statements
 
@@ -370,6 +368,11 @@ class ReturnNode(StatementNode):
 
     def __repr__(self) -> str:
         return f'return {self.node}'
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ReturnNode):
+            return False
+        return self.node == other.node
 
 class BreakNode(StatementNode):
     def __init__(self, node: ExpressionNode, context: Context):
@@ -379,6 +382,11 @@ class BreakNode(StatementNode):
 
     def __repr__(self) -> str:
         return f'break {self.node}'
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BreakNode):
+            return False
+        return self.node == other.node
 
 class ContinueNode(StatementNode):
     def __init__(self, context: Context):
@@ -386,6 +394,9 @@ class ContinueNode(StatementNode):
 
     def __repr__(self) -> str:
         return 'continue'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ContinueNode)
 
 # Block expressions
 
@@ -396,6 +407,14 @@ class BlockExpressionNode(ExpressionNode):
         self.statements = statements
         self.expression = expression
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BlockExpressionNode):
+            return False
+        for i in range(len(self.statements)):
+            if self.statements[i] != other.statements[i]:
+                return False
+        return self.expression == other.expression
+
 class IfExpressionNode(ExpressionNode):
     def __init__(self, condition: ExpressionNode, block: BlockExpressionNode, elseblock: BlockExpressionNode, context: Context):
         super().__init__(context)
@@ -404,6 +423,11 @@ class IfExpressionNode(ExpressionNode):
         self.block = block
         self.elseblock = elseblock
 
+    def __eq__(self, other: object):
+        if not isinstance(other, IfExpressionNode):
+            return False
+        return self.condition == other.condition and self.block == other.block and self.elseblock == other.elseblock
+
 class WhileExpressionNode(ExpressionNode):
     def __init__(self, condition: ExpressionNode, block: BlockExpressionNode, context: Context):
         super().__init__(context)
@@ -411,8 +435,35 @@ class WhileExpressionNode(ExpressionNode):
         self.condition = condition
         self.block = block
 
+    def __eq__(self, other: object):
+        if not isinstance(other, WhileExpressionNode):
+            return False
+        return self.condition == other.condition and self.block == other.block
+
 class LoopExpressionNode(ExpressionNode):
     def __init__(self, block: BlockExpressionNode, context: Context):
         super().__init__(context)
 
         self.block = block
+
+    def __eq__(self, other: object):
+        if not isinstance(other, LoopExpressionNode):
+            return False
+        return self.block == other.block
+
+# Items
+
+class ItemNode(Node):
+    def __init__(self, context: Context):
+        super().__init__(context)
+
+class FunctionDefinition(ItemNode):
+    def __init__(self, function_name: IdentifierNode, parameter_identifier: List[IdentifierNode], block_node: BlockExpressionNode):
+        self.function_name = function_name
+        self.parameter_identifier = parameter_identifier
+        self.block_node = block_node
+
+    def __eq__(self, other: object):
+        if not isinstance(other, FunctionDefinition):
+            return False
+        return self.function_name == other.function_name and self.parameter_identifier == other.parameter_identifier and self.block_node == other.block_node
