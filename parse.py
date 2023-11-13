@@ -61,7 +61,10 @@ class Parser:
         self.iterate()
         if not self.is_index_valid() or not self.get_token().matches(SymbolToken, '('):
             return IdentifierNode(token.text, token.context)
+        self.iterate()
         expr = self.parse_expression()
+        self.expect_symbol(')')
+        self.iterate()
         return FunctionApplicationNode(IdentifierNode(token.text, token.context), expr, token.context + expr.context)
     
     def parse_atom(self) -> ExpressionNode:
@@ -82,12 +85,17 @@ class Parser:
         
         if token.matches(SymbolToken, '('):
             expr = self.parse_expression()
-            if not self.get_token().matches(SymbolToken, ')'):
-                raise ContextualError('expected parenthesis', self.get_token().context)
+            self.expect_symbol(')')
             self.iterate()
             return expr
         
         raise ContextualError('unhandled token', token.context)
+    
+    def expect_symbol(self, *symbols: str):
+        for symbol in symbols:
+            if self.get_token().matches(SymbolToken, symbol):
+                return
+        raise ContextualError(f'expected {symbol}', self.get_token().context)
         
 def parse(tokens: List[Token]) -> Node:
     return Parser(tokens).parse()
