@@ -24,6 +24,24 @@ class Token:
     def is_right_paren(self) -> bool:
         return self._is_symbol(')')
     
+    def is_left_brace(self) -> bool:
+        return self._is_symbol('{')
+    
+    def is_right_brace(self) -> bool:
+        return self._is_symbol('}')
+    
+    def is_left_bracket(self) -> bool:
+        return self._is_symbol('[')
+    
+    def is_right_bracket(self) -> bool:
+        return self._is_symbol(']')
+    
+    def is_colon(self) -> bool:
+        return self._is_symbol(':')
+    
+    def is_right_arrow(self) -> bool:
+        return self._is_symbol('->')
+    
     def is_eq(self) -> bool:
         return self._is_symbol('=')
     
@@ -50,6 +68,9 @@ class Token:
     
     def is_let(self) -> bool:
         return self._is_symbol('let')
+    
+    def is_fn(self) -> bool:
+        return self._is_symbol('fn')
     
 class EOFToken(Token):
     def __init__(self, context: Context):
