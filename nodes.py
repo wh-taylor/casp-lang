@@ -343,12 +343,18 @@ class VariableDeclarationNode(ExpressionNode):
         self.datatype = datatype
         self.expression = expression
 
+    def __repr__(self) -> str:
+        return f'let {self.identifier}: {self.datatype} = {self.expression}'
+
 class VariableReassignmentNode(ExpressionNode):
     def __init__(self, identifier: IdentifierNode, expression: ExpressionNode, context: Context):
         super().__init__(context)
 
         self.identifier = identifier
         self.expression = expression
+
+    def __repr__(self) -> str:
+        return f'{self.identifier} = {self.expression}'
 
 # Statements
 
