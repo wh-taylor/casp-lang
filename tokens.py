@@ -12,43 +12,43 @@ class Token:
     def _matches(self, tokentype: type, text: str) -> bool:
         return type(self) == tokentype and self.text == text
     
-    def _is_symbol(self, symbol: str):
+    def _is_symbol(self, symbol: str) -> bool:
         return self._matches(SymbolToken, symbol)
     
-    def is_semicolon(self):
+    def is_semicolon(self) -> bool:
         return self._is_symbol(';')
     
-    def is_left_paren(self):
+    def is_left_paren(self) -> bool:
         return self._is_symbol('(')
     
-    def is_right_paren(self):
+    def is_right_paren(self) -> bool:
         return self._is_symbol(')')
     
-    def is_eq(self):
+    def is_eq(self) -> bool:
         return self._is_symbol('=')
     
-    def is_add(self):
+    def is_add(self) -> bool:
         return self._is_symbol('+')
     
-    def is_sub(self):
+    def is_sub(self) -> bool:
         return self._is_symbol('-')
     
-    def is_mul(self):
+    def is_mul(self) -> bool:
         return self._is_symbol('*')
     
-    def is_div(self):
+    def is_div(self) -> bool:
         return self._is_symbol('/')
     
-    def is_return(self):
+    def is_return(self) -> bool:
         return self._is_symbol('return')
     
-    def is_break(self):
+    def is_break(self) -> bool:
         return self._is_symbol('break')
     
-    def is_continue(self):
+    def is_continue(self) -> bool:
         return self._is_symbol('continue')
     
-    def is_let(self):
+    def is_let(self) -> bool:
         return self._is_symbol('let')
     
 class EOFToken(Token):
