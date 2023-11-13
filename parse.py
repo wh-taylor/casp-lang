@@ -1,4 +1,5 @@
 from nodes import *
+from context import ContextualError
 
 class Parser:
     def __init__(self, tokens: List[Token]):
@@ -15,6 +16,9 @@ class Parser:
         self.index += 1
 
     def parse(self) -> Node:
+        return self.parse_expression()
+    
+    def parse_expression(self) -> ExpressionNode:
         return self.parse_factor()
     
     def parse_factor(self) -> ExpressionNode:
@@ -35,6 +39,13 @@ class Parser:
         
         if type(token) == IdentifierToken:
             return IdentifierNode(token.text, token.context)
+        
+        if token.matches(SymbolToken, '('):
+            expr = self.parse_expression()
+            if not self.is_index_valid() or not self.get_token().matches(SymbolToken, ')'):
+                raise ContextualError('unmatched parenthesis', token.context)
+            self.iterate()
+            return expr
         
 def parse(tokens: List[Token]) -> Node:
     return Parser(tokens).parse()
