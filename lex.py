@@ -118,7 +118,7 @@ class Lexer:
 
     def lex_string(self):
         self.iterate()
-        init_index = self.get_index()
+        init_index = self.get_index()-1
         final_index = self.get_index()
         text = ''
 
@@ -137,11 +137,11 @@ class Lexer:
             final_index = self.get_index()
             self.iterate()
         
-        self.append_token(StringToken(text, self.get_context(init_index, final_index)))
+        self.append_token(StringToken(text, self.get_context(init_index, final_index+1)))
 
     def lex_char(self):
         self.iterate()
-        init_index = self.get_index()
+        init_index = self.get_index()-1
         final_index = self.get_index()
         text = ''
 
@@ -160,7 +160,7 @@ class Lexer:
             final_index = self.get_index()
             self.iterate()
 
-        context = self.get_context(init_index, final_index)
+        context = self.get_context(init_index, final_index+1)
 
         if len(text) != 1: raise ContextualError('length of char literal must be 1', context)
         
