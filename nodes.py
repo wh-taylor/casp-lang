@@ -135,6 +135,10 @@ class LiteralNode(ExpressionNode):
         return repr(self.value)
 
 
+class NullNode(LiteralNode):
+    def __init__(self, context: Context):
+        super().__init__(NullValue(), context)
+
 class IntNode(LiteralNode):
     def __init__(self, value: IntValue, context: Context):
         super().__init__(value, context)
