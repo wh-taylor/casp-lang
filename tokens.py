@@ -11,6 +11,13 @@ class Token:
     
     def matches(self, tokentype: type, text: str) -> bool:
         return type(self) == tokentype and self.text == text
+    
+class EOFToken(Token):
+    def __init__(self, context: Context):
+        super().__init__('EOF', 'EOF', context)
+
+    def __repr__(self) -> str:
+        return f'{self.text}: {self.tokentype}'
 
 class IdentifierToken(Token):
     def __init__(self, text: str, context: Context):

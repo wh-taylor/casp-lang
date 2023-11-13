@@ -22,16 +22,16 @@ class Lexer:
         self._index = 0
         self.tokens: List[Token] = []
 
-    def is_index_valid(self):
+    def is_index_valid(self) -> bool:
         return self._index < len(self._code)
 
-    def get_current_character(self):
+    def get_current_character(self) -> str:
         return self._code[self._index]
     
-    def peek_character(self):
+    def peek_character(self) -> str:
         return self._code[self._index+1]
     
-    def chars_match(self, text: str):
+    def chars_match(self, text: str) -> bool:
         return self._code[self._index:self._index+len(text)] == text
     
     def append_token(self, token: Token):
@@ -81,6 +81,7 @@ class Lexer:
                 else:
                     self.lex_operator()
 
+        self.append_token(EOFToken(self.get_context(self.get_index(), self.get_index())))
         return self.tokens
     
     def lex_word(self):
@@ -180,7 +181,7 @@ class Lexer:
 
         self.append_token(SymbolToken(text, self.get_context(init_index, final_index)))
     
-    def get_escape_sequence(self):
+    def get_escape_sequence(self) -> str:
         if self.chars_match('\\n'):
             self.iterate(2)
             return '\n'

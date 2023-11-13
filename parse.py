@@ -6,8 +6,8 @@ class Parser:
         self.tokens = tokens
         self.index = 0
 
-    def get_token(self) -> Optional[Token]:
-        return self.tokens[self.index] if self.is_index_valid() else None
+    def get_token(self) -> Token:
+        return self.tokens[self.index]
     
     def is_index_valid(self) -> bool:
         return self.index < len(self.tokens)
@@ -81,8 +81,8 @@ class Parser:
         
         if token.matches(SymbolToken, '('):
             expr = self.parse_expression()
-            if not self.is_index_valid() or not self.get_token().matches(SymbolToken, ')'):
-                raise ContextualError('unmatched parenthesis', token.context)
+            if not self.get_token().matches(SymbolToken, ')'):
+                raise ContextualError('expected parenthesis', self.get_token().context)
             self.iterate()
             return expr
         
