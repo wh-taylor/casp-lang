@@ -179,6 +179,12 @@ class Parser:
         token = self.get_token()
         self.iterate()
 
+        if token.is_left_paren():
+            expr = self.parse_expression()
+            self.expect_symbol(')')
+            self.iterate()
+            return expr
+
         if type(token) == IntegerToken:
             return LiteralNode(IntValue(int(token.text)), token.context)
         
@@ -191,11 +197,23 @@ class Parser:
         if type(token) == CharToken:
             return LiteralNode(CharValue(token.text), token.context)
         
-        if token.is_left_paren():
-            expr = self.parse_expression()
-            self.expect_symbol(')')
-            self.iterate()
-            return expr
+        if token.is_Int():
+            return LiteralNode(DatatypeValue(IntType()), token.context)
+        
+        if token.is_Float():
+            return LiteralNode(DatatypeValue(FloatType()), token.context)
+        
+        if token.is_Bool():
+            return LiteralNode(DatatypeValue(BoolType()), token.context)
+        
+        if token.is_String():
+            return LiteralNode(DatatypeValue(StringType()), token.context)
+        
+        if token.is_Char():
+            return LiteralNode(DatatypeValue(CharType()), token.context)
+        
+        if token.is_Type():
+            return LiteralNode(DatatypeValue(DatatypeType()), token.context)
         
         raise ContextualError('unhandled token', token.context)
 

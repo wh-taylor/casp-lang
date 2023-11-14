@@ -72,6 +72,25 @@ class Token:
     def is_fn(self) -> bool:
         return self._is_symbol('fn')
     
+    def is_Int(self) -> bool:
+        return self._is_symbol('Int')
+    
+    def is_Float(self) -> bool:
+        return self._is_symbol('Float')
+    
+    def is_Bool(self) -> bool:
+        return self._is_symbol('Bool')
+    
+    def is_String(self) -> bool:
+        return self._is_symbol('String')
+    
+    def is_Char(self) -> bool:
+        return self._is_symbol('Char')
+    
+    def is_Type(self) -> bool:
+        return self._is_symbol('Type')
+
+    
 class EOFToken(Token):
     def __init__(self, context: Context):
         super().__init__('EOF', 'EOF', context)

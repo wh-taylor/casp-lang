@@ -7,7 +7,8 @@ DIGITS = '0123456789'
 WHITESPACE = ' \n\v\t\f\r\b'
 
 KEYWORDS = [
-    'fn', 'struct', 'let', 'return', 'break', 'continue'
+    'fn', 'struct', 'let', 'return', 'break', 'continue',
+    'Int', 'Float', 'Bool', 'Str', 'Char', 'Type',
 ]
 
 SYMBOLS = '()[]{}'
