@@ -43,6 +43,10 @@ class FunctionObject:
 
 # Value subclasses
 
+class DatatypeValue(Value):
+    def __init__(self, datatype):
+        super().__init__(datatype, DatatypeType())
+
 class NullValue(Value):
     def __init__(self):
         super().__init__(None, NullType())
@@ -105,7 +109,6 @@ class VectorValue(Value):
 class StructValue(Value):
     def __init__(self, members: List[StructMemberObject], struct_type: DataType):
         super().__init__(StructObject(members), struct_type)
-
 
 
 # Nodes

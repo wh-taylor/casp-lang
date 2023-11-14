@@ -32,6 +32,10 @@ class CharType:
     def __repr__(self) -> str:
         return 'char'
     
+class DatatypeType:
+    def __repr__(self) -> str:
+        return 'datatype'
+    
 # Product types; types with types in them
     
 @dataclass
