@@ -70,6 +70,6 @@ class NewType:
 
 DataType \
     = IntType | FloatType | BoolType \
-    | StringType | CharType \
+    | StringType | CharType | DatatypeType \
     | FunctionType | ArrayType | VectorType \
     | NewType

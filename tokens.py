@@ -89,6 +89,9 @@ class Token:
     
     def is_Type(self) -> bool:
         return self._is_symbol('Type')
+    
+    def is_eof(self) -> bool:
+        return self._matches(EOFToken, 'EOF')
 
     
 class EOFToken(Token):

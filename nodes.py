@@ -41,10 +41,13 @@ class FunctionObject:
         self.input_datatype = input_datatype
         self.output_datatype = output_datatype
 
+    def __repr__(self) -> str:
+        return f'({self.input_node}: {self.input_datatype}) -> {self.output_datatype} => {self.output_node}'
+
 # Value subclasses
 
 class DatatypeValue(Value):
-    def __init__(self, datatype):
+    def __init__(self, datatype: DataType):
         super().__init__(datatype, DatatypeType())
 
 class NullValue(Value):
@@ -178,6 +181,10 @@ class StringNode(LiteralNode):
 
 class CharNode(LiteralNode):
     def __init__(self, value: CharValue, context: Context):
+        super().__init__(value, context)
+
+class DatatypeNode(LiteralNode):
+    def __init__(self, value: DatatypeValue, context: Context):
         super().__init__(value, context)
 
 class ArrayNode(LiteralNode):
@@ -549,7 +556,9 @@ class ItemNode(Node):
         super().__init__(context)
 
 class FunctionDefinitionNode(ItemNode):
-    def __init__(self, function_name: IdentifierNode, parameter_identifier: List[IdentifierNode], block_node: BlockExpressionNode, input_datatype: ExpressionNode, output_datatype: ExpressionNode, context: Context):
+    def __init__(self, function_name: IdentifierNode, parameter_identifier: IdentifierNode, block_node: BlockExpressionNode, input_datatype: ExpressionNode, output_datatype: ExpressionNode, context: Context):
+        super().__init__(context)
+        
         self.function_name = function_name
         self.parameter_identifier = parameter_identifier
         self.block_node = block_node

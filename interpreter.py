@@ -6,7 +6,7 @@ class DefinitionError(Exception):
         self.identifier = identifier
 
 class Definition:
-    def __init__(self, identifier: IdentifierNode, defined_value: Value, datatype: ExpressionNode):
+    def __init__(self, identifier: IdentifierNode, defined_value: Value, datatype: DataType):
         self.identifier = identifier
         self.value = defined_value
         self.datatype = datatype
@@ -18,11 +18,17 @@ class DefinitionSet:
     def add_definition(self, definition: Definition):
         self.definitions.append(definition)
 
-    def get_identifier_value(self, identifier: IdentifierNode):
+    def get_value_by_identifier(self, identifier: IdentifierNode) -> Value:
         for definition in self.definitions:
             if definition.identifier == identifier:
                 return definition.value
         raise DefinitionError(f'no definition for {identifier.identifier} exists', identifier)
+    
+    def get_value_by_name(self, name: str) -> Value:
+        for definition in self.definitions:
+            if definition.identifier.identifier == name:
+                return definition.value
+        raise ValueError(f'no definition that goes by {name} exists')
 
 class Interpreter:
     def __init__(self, definitions: DefinitionSet):
@@ -44,7 +50,36 @@ class Interpreter:
             self.interpret_function_definition_node(node)
 
     def interpret_function_definition_node(self, node: FunctionDefinitionNode):
-        function_value = FunctionValue(node.parameter_identifier, node.block_node, node.input_datatype, node.output_datatype)
-        function_type = FunctionType(node.input_datatype, node.output_datatype)
+        input_datatype = self.interpret_datatype(node.input_datatype)
+        output_datatype = self.interpret_datatype(node.output_datatype)
+        function_value = FunctionValue(node.parameter_identifier, node.block_node, input_datatype, output_datatype)
+        function_type = FunctionType(input_datatype, output_datatype)
         definition = Definition(node.function_name, function_value, function_type)
         self.definitions.add_definition(definition)
+
+    def interpret_datatype(self, node: ExpressionNode) -> DataType:
+        if not isinstance(node, DatatypeNode):
+            raise ContextualError(f'expected literal node, received {node}', node.context)
+        return node.value.value
+        
+def interpret(head_node: HeadNode):
+    definitions = DefinitionSet()
+    interpreter = Interpreter(definitions)
+    interpreter.interpret_head_node(head_node)
+
+    # Run main function if it exists
+    try:
+        function_value = definitions.get_value_by_name('main')
+        if not isinstance(function_value, FunctionValue):
+            raise ValueError('main definition is not a function')
+        
+        function_object = function_value.value
+        if not isinstance(function_object, FunctionObject):
+            raise ValueError('function value does not contain function object')
+        
+        block_node = function_object.output_node
+        interpreter.interpret(block_node)
+    except DefinitionError:
+        pass
+
+    print([definition.value for definition in definitions.definitions])

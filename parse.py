@@ -16,8 +16,11 @@ class Parser:
         if type(self.get_token()) == EOFToken: return
         self.index += 1
 
-    def parse(self) -> Node:
-        return self.parse_item()
+    def parse(self) -> HeadNode:
+        items: List[ItemNode] = []
+        while not self.get_token().is_eof():
+            items.append(self.parse_item())
+        return HeadNode(items, sum([item.context for item in items[1:]], start=items[0].context))
     
     def parse_item(self) -> ItemNode:
         parse_subprecedence = self.parse_function_definition
@@ -186,34 +189,34 @@ class Parser:
             return expr
 
         if type(token) == IntegerToken:
-            return LiteralNode(IntValue(int(token.text)), token.context)
+            return IntNode(IntValue(int(token.text)), token.context)
         
         if type(token) == FloatToken:
-            return LiteralNode(FloatValue(float(token.text)), token.context)
+            return FloatNode(FloatValue(float(token.text)), token.context)
         
         if type(token) == StringToken:
-            return LiteralNode(StringValue(token.text), token.context)
+            return StringNode(StringValue(token.text), token.context)
         
         if type(token) == CharToken:
-            return LiteralNode(CharValue(token.text), token.context)
+            return CharNode(CharValue(token.text), token.context)
         
         if token.is_Int():
-            return LiteralNode(DatatypeValue(IntType()), token.context)
+            return DatatypeNode(DatatypeValue(IntType()), token.context)
         
         if token.is_Float():
-            return LiteralNode(DatatypeValue(FloatType()), token.context)
+            return DatatypeNode(DatatypeValue(FloatType()), token.context)
         
         if token.is_Bool():
-            return LiteralNode(DatatypeValue(BoolType()), token.context)
+            return DatatypeNode(DatatypeValue(BoolType()), token.context)
         
         if token.is_String():
-            return LiteralNode(DatatypeValue(StringType()), token.context)
+            return DatatypeNode(DatatypeValue(StringType()), token.context)
         
         if token.is_Char():
-            return LiteralNode(DatatypeValue(CharType()), token.context)
+            return DatatypeNode(DatatypeValue(CharType()), token.context)
         
         if token.is_Type():
-            return LiteralNode(DatatypeValue(DatatypeType()), token.context)
+            return DatatypeNode(DatatypeValue(DatatypeType()), token.context)
         
         raise ContextualError('unhandled token', token.context)
 
@@ -230,5 +233,5 @@ class Parser:
                 return
         raise ContextualError(f'expected {symbol}', self.get_token().context)
         
-def parse(tokens: List[Token]) -> Node:
+def parse(tokens: List[Token]) -> HeadNode:
     return Parser(tokens).parse()
