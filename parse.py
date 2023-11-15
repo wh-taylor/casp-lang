@@ -183,12 +183,15 @@ class Parser:
         input_nodes = []
         self.expect_symbol('(')
         self.iterate()
-        input_nodes.append(self.parse_expression())
-        while self.get_token().is_comma():
-            self.iterate()
+        if not self.get_token().is_right_paren():
             input_nodes.append(self.parse_expression())
-        self.expect_symbol(')')
-        self.iterate()
+            while self.get_token().is_comma():
+                self.iterate()
+                input_nodes.append(self.parse_expression())
+            self.expect_symbol(')')
+            self.iterate()
+        else:
+            self.iterate()
         return FunctionApplicationNode(IdentifierNode(token.text, token.context), input_nodes, token.context + input_nodes[-1].context if len(input_nodes) > 0 else token.context)
     
     def parse_atom(self) -> ExpressionNode:
