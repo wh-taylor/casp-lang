@@ -248,7 +248,7 @@ class FunctionDatatypeNode(ExpressionNode):
         self.output_datatype_node = output_datatype_node
     
     def __repr__(self) -> str:
-        return f'{repr_ts(self.input_datatype_nodes)} -> {self.output_datatype_node}'
+        return f'{repr_ts([str(node) for node in self.input_datatype_nodes])} -> {self.output_datatype_node}'
     
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, FunctionDatatypeNode):
