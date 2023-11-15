@@ -45,6 +45,9 @@ class Token:
     def is_right_arrow(self) -> bool:
         return self._is_symbol('->')
     
+    def is_ampersand(self) -> bool:
+        return self._is_symbol('&')
+    
     def is_eq(self) -> bool:
         return self._is_symbol('=')
     

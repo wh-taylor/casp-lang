@@ -222,9 +222,11 @@ class Interpreter:
         return NullValue()
 
     def interpret_datatype(self, node: ExpressionNode) -> DataType:
-        if not isinstance(node, DatatypeNode):
-            raise ContextualError(f'expected literal node, received {node}', node.context)
-        return node.value.value
+        if isinstance(node, DatatypeNode):
+            return node.value.value
+        if isinstance(node, FunctionDatatypeNode):
+            return FunctionType((self.interpret_datatype(input_datatype_node) for input_datatype_node in node.input_datatype_nodes), self.interpret_datatype(node.output_datatype_node))
+        raise ContextualError(f'expected literal node, received {node}', node.context)
         
 def interpret(head_node: HeadNode):
     namespace_set = NamespaceSet()

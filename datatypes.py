@@ -69,7 +69,7 @@ class FunctionType:
         return f'{repr_ts(repr_xts)} -> {self.yt}'
     
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, FunctionType) and self.xts == other.xts and self.yt == other.yt
+        return isinstance(other, FunctionType) and list(self.xts) == list(other.xts) and self.yt == other.yt
     
 @dataclass
 class ArrayType:
@@ -89,7 +89,7 @@ class VectorType:
         return f'({repr_ts([repr(t) for t in self.ts])})'
     
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, VectorType) and self.ts == other.ts
+        return isinstance(other, VectorType) and list(self.ts) == list(other.ts)
 
 @dataclass
 class NewType:

@@ -35,7 +35,7 @@ class Parser:
         function_name = self.parse_identifier()
         
         parameter_names = []
-        parameter_datatypes = []
+        parameter_datatypes = []\
 
         # Parse parameter `(parameter: datatype)`
         while self.get_token().is_left_paren():
@@ -144,9 +144,26 @@ class Parser:
         return self.parse_block_as_expression()
     
     def parse_block_as_expression(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_addition_and_subtraction
+        parse_subprecedence = self.parse_function_datatype
         if not self.get_token().is_left_brace(): return parse_subprecedence()
         return self.parse_block()
+    
+    def parse_function_datatype(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_addition_and_subtraction
+        sub_node = parse_subprecedence()
+        left_node = [sub_node]
+        while self.is_index_valid():
+            if self.get_token().is_ampersand():
+                self.iterate()
+                right_node = parse_subprecedence()
+                left_node.append(right_node)
+            elif self.get_token().is_right_arrow():
+                self.iterate()
+                right_node = self.parse_function_datatype()
+                return FunctionDatatypeNode(left_node, right_node, left_node[0].context + right_node.context)
+            else:
+                break
+        return sub_node
     
     def parse_addition_and_subtraction(self) -> ExpressionNode:
         parse_subprecedence = self.parse_multiplication_and_division

@@ -240,6 +240,20 @@ class VectorNode(LiteralNode):
     def __init__(self, value: VectorValue, context: Context):
         super().__init__(value, context)
 
+class FunctionDatatypeNode(ExpressionNode):
+    def __init__(self, input_datatype_nodes: List[ExpressionNode], output_datatype_node: ExpressionNode, context: Context):
+        super().__init__(context)
+
+        self.input_datatype_nodes = input_datatype_nodes
+        self.output_datatype_node = output_datatype_node
+    
+    def __repr__(self) -> str:
+        return f'{repr_ts(self.input_datatype_nodes)} -> {self.output_datatype_node}'
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FunctionDatatypeNode):
+            return False
+        return self.input_datatype_nodes == other.input_datatype_nodes and self.output_datatype_node == other.output_datatype_node
 
 class IdentifierNode(ExpressionNode):
     def __init__(self, identifier: str, context: Context):
