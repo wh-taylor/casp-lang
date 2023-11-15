@@ -153,6 +153,9 @@ class Interpreter:
 
         expression = function_object.output_node
 
+        if len(node.input_nodes) != len(function_object.input_nodes):
+            raise ContextualError(f'expected {len(function_object.input_nodes)} inputs, received {len(node.input_nodes)}', node.context)
+
         self.namespace_set.add_scope()
 
         for i, input_node in enumerate(function_object.input_nodes):
