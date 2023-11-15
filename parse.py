@@ -131,7 +131,12 @@ class Parser:
         return BlockExpressionNode(statements, expression, init_context + final_context)
 
     def parse_expression(self) -> ExpressionNode:
-        return self.parse_addition_and_subtraction()
+        return self.parse_block_as_expression()
+    
+    def parse_block_as_expression(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_addition_and_subtraction
+        if not self.get_token().is_left_brace(): return parse_subprecedence()
+        return self.parse_block()
     
     def parse_addition_and_subtraction(self) -> ExpressionNode:
         parse_subprecedence = self.parse_multiplication_and_division

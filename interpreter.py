@@ -117,7 +117,11 @@ class Interpreter:
 
     def interpret_block(self, node: BlockExpressionNode) -> Value:
         for statement in node.statements:
-            self.interpret(statement)
+            try:
+                self.interpret(statement)
+            except BreakExit as exit:
+                return self.interpret(exit.node)
+            
         return self.interpret(node.expression) if node.expression is not None else NullValue()
     
     def interpret_variable_declaration(self, node: VariableDeclarationNode) -> Value:
@@ -155,7 +159,19 @@ class Interpreter:
 
         self.namespace_set.add_scope()
         self.namespace_set.add_definition(Definition(function_object.input_node, input_value, function_object.input_datatype))
-        output_value = self.interpret(expression)
+        
+        if isinstance(expression, BlockExpressionNode):
+            for statement in expression.statements:
+                try:
+                    self.interpret(statement)
+                except ReturnExit as exit:
+                    output_value = self.interpret(exit.node)
+                    break
+            else:
+                output_value = self.interpret(expression) if expression is not None else NullValue()
+        else:
+            output_value = self.interpret(expression)
+            
         self.namespace_set.drop_scope()
 
         if output_value.datatype != function_object.output_datatype:
@@ -179,6 +195,12 @@ class Interpreter:
             return NullValue()
         if isinstance(node, ExpressionNode):
             return self.interpret_expression(node)
+        if isinstance(node, ReturnNode):
+            raise ReturnExit(node.node)
+        if isinstance(node, BreakNode):
+            raise BreakExit(node.node)
+        if isinstance(node, ContinueNode):
+            raise ContinueExit()
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
 
     def interpret_function_definition_node(self, node: FunctionDefinitionNode) -> Value:

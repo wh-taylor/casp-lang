@@ -137,6 +137,27 @@ class StructValue(Value):
     def __init__(self, members: List[StructMemberObject], struct_type: DataType):
         super().__init__(StructObject(members), struct_type)
 
+# Value exits
+
+class ValueExit(Exception):
+    def __init__(self):
+        pass
+
+class ReturnExit(Exception):
+    def __init__(self, node: Node):
+        self.node = node
+
+class BreakExit(Exception):
+    def __init__(self, node: Node):
+        self.node = node
+
+class ContinueExit(Exception):
+    def __init__(self):
+        pass
+
+class RaiseExit(Exception):
+    def __init__(self, node: Node):
+        self.node = node
 
 # Nodes
 
