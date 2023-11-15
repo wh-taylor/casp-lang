@@ -237,7 +237,7 @@ def interpret(head_node: HeadNode):
     try:
         # Run main function if it exists
         function_value = namespace_set.get_value_by_name('main')
-    except DefinitionError:
+    except ValueError:
         return
     
     try:

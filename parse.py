@@ -223,6 +223,9 @@ class Parser:
         if type(token) == CharToken:
             return CharNode(CharValue(token.text), token.context)
         
+        if token.is_Null():
+            return DatatypeNode(DatatypeValue(NullType()), token.context)
+        
         if token.is_Int():
             return DatatypeNode(DatatypeValue(IntType()), token.context)
         

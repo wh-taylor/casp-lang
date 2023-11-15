@@ -75,6 +75,9 @@ class Token:
     def is_fn(self) -> bool:
         return self._is_symbol('fn')
     
+    def is_Null(self) -> bool:
+        return self._is_symbol('Null')
+    
     def is_Int(self) -> bool:
         return self._is_symbol('Int')
     
