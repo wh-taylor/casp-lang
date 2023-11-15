@@ -204,7 +204,7 @@ class Parser:
         self.iterate()
         if not self.is_index_valid() or not self.get_token().is_left_paren():
             return IdentifierNode(token.text, token.context)
-        input_nodes = []
+        input_nodes: List[ExpressionNode] = []
         self.expect_symbol('(')
         self.iterate()
         if not self.get_token().is_right_paren():
