@@ -738,22 +738,22 @@ class ItemNode(Node):
         super().__init__(context)
 
 class FunctionDefinitionNode(ItemNode):
-    def __init__(self, function_name: IdentifierNode, parameter_identifiers: List[IdentifierNode], block_node: BlockExpressionNode, input_datatypes: List[ExpressionNode], output_datatype: ExpressionNode, context: Context):
+    def __init__(self, function_name: IdentifierNode, parameter_identifiers: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[ExpressionNode], output_datatype: ExpressionNode, context: Context):
         super().__init__(context)
         
         self.function_name = function_name
         self.parameter_identifiers = parameter_identifiers
-        self.block_node = block_node
+        self.expression_node = expression_node
         self.input_datatypes = input_datatypes
         self.output_datatype = output_datatype
 
     def __eq__(self, other: object):
         if not isinstance(other, FunctionDefinitionNode):
             return False
-        return self.function_name == other.function_name and self.parameter_identifiers == other.parameter_identifiers and self.block_node == other.block_node
+        return self.function_name == other.function_name and self.parameter_identifiers == other.parameter_identifiers and self.expression_node == other.expression_node
     
     def __repr__(self):
-        return f'fn {self.function_name} ({self.parameter_identifiers}: {self.input_datatypes}) -> {self.output_datatype} {self.block_node}'
+        return f'fn {self.function_name} ({self.parameter_identifiers}: {self.input_datatypes}) -> {self.output_datatype} {self.expression_node}'
 
     def sub(self, old_node, new_node):
         if self == old_node:
@@ -761,7 +761,7 @@ class FunctionDefinitionNode(ItemNode):
         return IfExpressionNode(
             self.function_name.sub(old_node, new_node),
             [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.parameter_identifiers],
-            self.block_node.sub(old_node, new_node),
+            self.expression_node.sub(old_node, new_node),
             self.context)
     
 # Head

@@ -32,7 +32,7 @@ class Parser:
         if not token.is_fn():
             raise ContextualError('expected fn', token.context)
         self.iterate()
-        function_name = self.parse_identifier()\
+        function_name = self.parse_identifier()
         
         parameter_names = []
         parameter_datatypes = []
@@ -50,9 +50,16 @@ class Parser:
         self.iterate()
         return_datatype_name = self.parse_expression()
 
-        block = self.parse_block()
+        self.expect_symbol('{', '=')
+        if self.get_token().is_left_brace():
+            expr = self.parse_block_as_expression()
+        elif self.get_token().is_eq():
+            self.iterate()
+            expr = self.parse_expression()
+            self.expect_symbol(';')
+            self.iterate()
 
-        return FunctionDefinitionNode(function_name, parameter_names, block, parameter_datatypes, return_datatype_name, function_name.context + block.context)
+        return FunctionDefinitionNode(function_name, parameter_names, expr, parameter_datatypes, return_datatype_name, function_name.context + expr.context)
     
     def parse_statement(self) -> StatementNode:
         parse_subprecedence = self.parse_return

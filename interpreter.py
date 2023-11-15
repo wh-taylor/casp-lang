@@ -215,7 +215,7 @@ class Interpreter:
     def interpret_function_definition_node(self, node: FunctionDefinitionNode) -> Value:
         input_datatypes = [self.interpret_datatype(input_datatype) for input_datatype in node.input_datatypes]
         output_datatype = self.interpret_datatype(node.output_datatype)
-        function_value = FunctionValue(node.parameter_identifiers, node.block_node, input_datatypes, output_datatype)
+        function_value = FunctionValue(node.parameter_identifiers, node.expression_node, input_datatypes, output_datatype)
         function_type = FunctionType(input_datatypes, output_datatype)
         definition = Definition(node.function_name, function_value, function_type)
         self.namespace_set.add_definition(definition)
