@@ -147,13 +147,14 @@ class Interpreter:
         function_object = function_value.value
         if not isinstance(function_object, FunctionObject):
             raise ContextualError(f'function value {function_value} does not contain function object', node.left_node.context)
-        
-        expression = function_object.output_node.sub(function_object.input_node, node.right_node)
+
+        expression = function_object.output_node
 
         if input_value.datatype != function_object.input_datatype:
             raise ContextualError(f'expected output type {function_object.input_datatype} received output type {input_value.datatype}', node.left_node.context)
 
         self.namespace_set.add_scope()
+        self.namespace_set.add_definition(Definition(function_object.input_node, input_value, function_object.input_datatype))
         output_value = self.interpret(expression)
         self.namespace_set.drop_scope()
 
