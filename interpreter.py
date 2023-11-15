@@ -95,6 +95,8 @@ class Interpreter:
             return self.interpret_binary_operator(node)
         if isinstance(node, BlockExpressionNode):
             return self.interpret_block(node)
+        if isinstance(node, VariableDeclarationNode):
+            return self.interpret_variable_declaration(node)
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
     
     def interpret_identifier(self, node: IdentifierNode) -> Value:
@@ -118,13 +120,22 @@ class Interpreter:
             self.interpret(statement)
         return self.interpret(node.expression) if node.expression is not None else NullValue()
     
+    def interpret_variable_declaration(self, node: VariableDeclarationNode) -> Value:
+        value = self.interpret(node.expression)
+        datatype = self.interpret_datatype(node.datatype)
+        if value.datatype != datatype:
+            raise ContextualError(f'expected type {datatype} received type {value.datatype}', node.expression.context)
+        definition = Definition(node.identifier, value, datatype)
+        self.namespace_set.add_definition(definition)
+        return NullValue()
+    
     def interpret_addition(self, node: AdditionNode) -> Value:
         left_value = self.interpret(node.left_node)
         right_value = self.interpret(node.right_node)
         try:
             return left_value + right_value # type: ignore
         except AttributeError:
-            raise ContextualError(f'addition is not implemented for {node.right_node}', node.context)
+            raise ContextualError(f'addition is not implemented for {left_value.datatype} and {right_value.datatype}', node.context)
         
     def interpret_function_application(self, node: FunctionApplicationNode) -> Value:
         function_value = self.interpret(node.left_node)
@@ -162,7 +173,7 @@ class Interpreter:
             try:
                 input_value.print() # type: ignore
             except AttributeError:
-                raise ContextualError(f'print is not implemented for {node.right_node}', node.context)
+                raise ContextualError(f'print is not implemented for {input_value.datatype}', node.context)
             
             return NullValue()
         if isinstance(node, ExpressionNode):
