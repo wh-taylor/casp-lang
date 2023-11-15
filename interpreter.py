@@ -3,6 +3,7 @@ from parse import *
 class DefinitionError(Exception):
     def __init__(self, message: str, identifier: IdentifierNode):
         super().__init__(message)
+        self.message = message
         self.identifier = identifier
 
 class Definition:
@@ -11,9 +12,9 @@ class Definition:
         self.value = defined_value
         self.datatype = datatype
 
-class DefinitionSet:
+class Namespace:
     def __init__(self):
-        self.definitions: List[Definition] = []
+        self.definitions: List[Definition] = [] # type: ignore
 
     def add_definition(self, definition: Definition):
         self.definitions.append(definition)
@@ -29,33 +30,153 @@ class DefinitionSet:
             if definition.identifier.identifier == name:
                 return definition.value
         raise ValueError(f'no definition that goes by {name} exists')
+    
+class NamespaceSet:
+    def __init__(self):
+        self.scopes: List[Namespace] = [Namespace()] # type: ignore
+
+    def _get_current_scope(self):
+        return self.scopes[-1]
+
+    def add_scope(self):
+        self.scopes.append(Namespace())
+    
+    def drop_scope(self):
+        self.scopes.pop()
+
+    def add_definition(self, definition: Definition):
+        self._get_current_scope().add_definition(definition)
+
+    def get_value_by_identifier(self, identifier: IdentifierNode) -> Value:
+        for scope in reversed(self.scopes):
+            try:
+                return scope.get_value_by_identifier(identifier)
+            except DefinitionError:
+                continue
+        raise DefinitionError(f'no definition for {identifier.identifier} exists', identifier)
+    
+    def get_value_by_name(self, name: str) -> Value:
+        for scope in reversed(self.scopes):
+            try:
+                return scope.get_value_by_name(name)
+            except ValueError:
+                continue
+        raise ValueError(f'no definition that goes by {name} exists')
 
 class Interpreter:
-    def __init__(self, definitions: DefinitionSet):
-        self.definitions = definitions
+    def __init__(self, namespace_set: NamespaceSet):
+        self.namespace_set = namespace_set
     
-    def interpret(self, node: Node):
+    def interpret(self, node: Node) -> Value:
         if isinstance(node, HeadNode):
-            return self.interpret_head_node(node)
+            return self.interpret_head(node)
         if isinstance(node, ItemNode):
-            return self.interpret_item_node(node)
-        raise ContextualError(f'interpretation of node {node} is unimplemented', node.context)
+            return self.interpret_item(node)
+        if isinstance(node, StatementNode):
+            return self.interpret_statement(node)
+        raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
     
-    def interpret_head_node(self, node: HeadNode):
+    def interpret_head(self, node: HeadNode) -> Value:
         for item_node in node.item_nodes:
             self.interpret(item_node)
+        return NullValue()
     
-    def interpret_item_node(self, node: ItemNode):
+    def interpret_item(self, node: ItemNode) -> Value:
         if isinstance(node, FunctionDefinitionNode):
-            self.interpret_function_definition_node(node)
+            return self.interpret_function_definition_node(node)
+        raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
 
-    def interpret_function_definition_node(self, node: FunctionDefinitionNode):
+    def interpret_expression(self, node: ExpressionNode) -> Value:
+        if isinstance(node, IdentifierNode):
+            return self.interpret_identifier(node)
+        if isinstance(node, LiteralNode):
+            return self.interpret_literal(node)
+        if isinstance(node, BinaryOperatorNode):
+            return self.interpret_binary_operator(node)
+        if isinstance(node, BlockExpressionNode):
+            return self.interpret_block(node)
+        raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
+    
+    def interpret_identifier(self, node: IdentifierNode) -> Value:
+        try:
+            return self.namespace_set.get_value_by_identifier(node)
+        except DefinitionError as e:
+            raise ContextualError(e.message, e.identifier.context)
+    
+    def interpret_literal(self, node: LiteralNode) -> Value:
+        return node.value
+
+    def interpret_binary_operator(self, node: BinaryOperatorNode) -> Value:
+        if isinstance(node, AdditionNode):
+            return self.interpret_addition(node)
+        if isinstance(node, FunctionApplicationNode):
+            return self.interpret_function_application(node)
+        raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
+
+    def interpret_block(self, node: BlockExpressionNode) -> Value:
+        for statement in node.statements:
+            self.interpret(statement)
+        return self.interpret(node.expression) if node.expression is not None else NullValue()
+    
+    def interpret_addition(self, node: AdditionNode) -> Value:
+        left_value = self.interpret(node.left_node)
+        right_value = self.interpret(node.right_node)
+        try:
+            return left_value + right_value # type: ignore
+        except AttributeError:
+            raise ContextualError(f'addition is not implemented for {node.right_node}', node.context)
+        
+    def interpret_function_application(self, node: FunctionApplicationNode) -> Value:
+        function_value = self.interpret(node.left_node)
+        input_value = self.interpret(node.right_node)
+
+        if not isinstance(function_value, FunctionValue):
+            raise ContextualError(f'expected function, received {function_value}', node.left_node.context)
+        
+        function_object = function_value.value
+        if not isinstance(function_object, FunctionObject):
+            raise ContextualError(f'function value {function_value} does not contain function object', node.left_node.context)
+        
+        expression = function_object.output_node.sub(function_object.input_node, node.right_node)
+
+        if input_value.datatype != function_object.input_datatype:
+            raise ContextualError(f'expected output type {function_object.input_datatype} received output type {input_value.datatype}', node.left_node.context)
+
+        self.namespace_set.add_scope()
+        output_value = self.interpret(expression)
+        self.namespace_set.drop_scope()
+
+        if output_value.datatype != function_object.output_datatype:
+            raise ContextualError(f'expected output type {function_object.output_datatype} received output type {output_value.datatype}', node.left_node.context)
+
+        return output_value
+
+    
+    def interpret_statement(self, node: StatementNode) -> Value:
+        if isinstance(node, FunctionApplicationNode) \
+            and isinstance(node.left_node, IdentifierNode) \
+            and node.left_node.identifier == 'print':
+
+            input_value = self.interpret(node.right_node)
+
+            try:
+                input_value.print() # type: ignore
+            except AttributeError:
+                raise ContextualError(f'print is not implemented for {node.right_node}', node.context)
+            
+            return NullValue()
+        if isinstance(node, ExpressionNode):
+            return self.interpret_expression(node)
+        raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
+
+    def interpret_function_definition_node(self, node: FunctionDefinitionNode) -> Value:
         input_datatype = self.interpret_datatype(node.input_datatype)
         output_datatype = self.interpret_datatype(node.output_datatype)
         function_value = FunctionValue(node.parameter_identifier, node.block_node, input_datatype, output_datatype)
         function_type = FunctionType(input_datatype, output_datatype)
         definition = Definition(node.function_name, function_value, function_type)
-        self.definitions.add_definition(definition)
+        self.namespace_set.add_definition(definition)
+        return NullValue()
 
     def interpret_datatype(self, node: ExpressionNode) -> DataType:
         if not isinstance(node, DatatypeNode):
@@ -63,13 +184,20 @@ class Interpreter:
         return node.value.value
         
 def interpret(head_node: HeadNode):
-    definitions = DefinitionSet()
-    interpreter = Interpreter(definitions)
-    interpreter.interpret_head_node(head_node)
-
-    # Run main function if it exists
+    namespace_set = NamespaceSet()
+    interpreter = Interpreter(namespace_set)
     try:
-        function_value = definitions.get_value_by_name('main')
+        interpreter.interpret_head(head_node)
+    except ContextualError as e:
+        print(e.get_context().highlight_context_line('^'), e)
+
+    try:
+        # Run main function if it exists
+        function_value = namespace_set.get_value_by_name('main')
+    except DefinitionError:
+        return
+    
+    try:
         if not isinstance(function_value, FunctionValue):
             raise ValueError('main definition is not a function')
         
@@ -77,9 +205,8 @@ def interpret(head_node: HeadNode):
         if not isinstance(function_object, FunctionObject):
             raise ValueError('function value does not contain function object')
         
-        block_node = function_object.output_node
-        interpreter.interpret(block_node)
-    except DefinitionError:
-        pass
-
-    print([definition.value for definition in definitions.definitions])
+        expression_node = function_object.output_node
+        interpreter.interpret(expression_node)
+    except ContextualError as e:
+        # print(e.get_context().highlight_context_line('^'), e)
+        raise e

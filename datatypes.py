@@ -10,31 +10,52 @@ def ts_repr(ts: List[DataType]) -> str:
 
 class NullType:
     def __repr__(self) -> str:
-        return 'null'
+        return 'Null'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, NullType)
 
 class IntType:
     def __repr__(self) -> str:
-        return 'int'
+        return 'Int'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, IntType)
     
 class FloatType:
     def __repr__(self) -> str:
-        return 'float'
+        return 'Float'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, FloatType)
     
 class BoolType:
     def __repr__(self) -> str:
-        return 'bool'
+        return 'Bool'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, BoolType)
     
 class StringType:
     def __repr__(self) -> str:
-        return 'str'
+        return 'String'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, StringType)
     
 class CharType:
     def __repr__(self) -> str:
-        return 'char'
+        return 'Char'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, CharType)
     
 class DatatypeType:
     def __repr__(self) -> str:
-        return 'datatype'
+        return 'Datatype'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, DatatypeType)
     
 # Product types; types with types in them
     
@@ -47,12 +68,18 @@ class FunctionType:
         repr_xt = f'({self.xt})' if type(self.xt) == FunctionType else repr(self.xt)
         return f'{repr_xt} -> {self.yt}'
     
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, FunctionType) and self.xt == other.xt and self.yt == other.yt
+    
 @dataclass
 class ArrayType:
     t: DataType
 
     def __repr__(self) -> str:
         return f'[{self.t}]'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ArrayType) and self.t == other.t
 
 @dataclass
 class VectorType:
@@ -60,6 +87,9 @@ class VectorType:
 
     def __repr__(self) -> str:
         return f'({ts_repr(self.ts)})'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, VectorType) and self.ts == other.ts
 
 @dataclass
 class NewType:
@@ -67,9 +97,12 @@ class NewType:
 
     def __repr__(self) -> str:
         return self.name
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, NewType) and self.name == other.name
 
 DataType \
-    = IntType | FloatType | BoolType \
+    = NullType | IntType | FloatType | BoolType \
     | StringType | CharType | DatatypeType \
     | FunctionType | ArrayType | VectorType \
     | NewType
