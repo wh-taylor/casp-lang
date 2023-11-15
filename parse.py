@@ -32,24 +32,27 @@ class Parser:
         if not token.is_fn():
             raise ContextualError('expected fn', token.context)
         self.iterate()
-        function_name = self.parse_identifier()
+        function_name = self.parse_identifier()\
+        
+        parameter_names = []
+        parameter_datatypes = []
 
         # Parse parameter `(parameter: datatype)`
-        self.expect_symbol('(')
-        self.iterate()
-        parameter_name = self.parse_identifier()
-        self.expect_symbol(':')
-        self.iterate()
-        parameter_datatype_name = self.parse_expression()
-        self.expect_symbol(')')
-        self.iterate()
+        while self.get_token().is_left_paren():
+            self.iterate()
+            parameter_names.append(self.parse_identifier())
+            self.expect_symbol(':')
+            self.iterate()
+            parameter_datatypes.append(self.parse_expression())
+            self.expect_symbol(')')
+            self.iterate()
         self.expect_symbol('->')
         self.iterate()
         return_datatype_name = self.parse_expression()
 
         block = self.parse_block()
 
-        return FunctionDefinitionNode(function_name, parameter_name, block, parameter_datatype_name, return_datatype_name, function_name.context + block.context)
+        return FunctionDefinitionNode(function_name, parameter_names, block, parameter_datatypes, return_datatype_name, function_name.context + block.context)
     
     def parse_statement(self) -> StatementNode:
         parse_subprecedence = self.parse_return
@@ -177,11 +180,16 @@ class Parser:
         self.iterate()
         if not self.is_index_valid() or not self.get_token().is_left_paren():
             return IdentifierNode(token.text, token.context)
+        input_nodes = []
+        self.expect_symbol('(')
         self.iterate()
-        expr = self.parse_expression()
+        input_nodes.append(self.parse_expression())
+        while self.get_token().is_comma():
+            self.iterate()
+            input_nodes.append(self.parse_expression())
         self.expect_symbol(')')
         self.iterate()
-        return FunctionApplicationNode(IdentifierNode(token.text, token.context), expr, token.context + expr.context)
+        return FunctionApplicationNode(IdentifierNode(token.text, token.context), input_nodes, token.context + input_nodes[-1].context if len(input_nodes) > 0 else token.context)
     
     def parse_atom(self) -> ExpressionNode:
         token = self.get_token()

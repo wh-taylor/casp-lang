@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing_extensions import List
 
 # Returns a comma-separated string of datatypes in a list
-def ts_repr(ts: List[DataType]) -> str:
-    return ', '.join([repr(t) for t in ts])
+def repr_ts(ts: List[str]) -> str:
+    return ', '.join([t for t in ts])
 
 # Singleton types
 
@@ -61,15 +61,15 @@ class DatatypeType:
     
 @dataclass
 class FunctionType:
-    xt: DataType
+    xts: List[DataType]
     yt: DataType
 
     def __repr__(self) -> str:
-        repr_xt = f'({self.xt})' if type(self.xt) == FunctionType else repr(self.xt)
-        return f'{repr_xt} -> {self.yt}'
+        repr_xts = [f'({xt})' if type(xt) == FunctionType else repr(xt) for xt in self.xts]
+        return f'{repr_ts(repr_xts)} -> {self.yt}'
     
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, FunctionType) and self.xt == other.xt and self.yt == other.yt
+        return isinstance(other, FunctionType) and self.xts == other.xts and self.yt == other.yt
     
 @dataclass
 class ArrayType:
@@ -86,7 +86,7 @@ class VectorType:
     ts: List[DataType]
 
     def __repr__(self) -> str:
-        return f'({ts_repr(self.ts)})'
+        return f'({repr_ts([repr(t) for t in self.ts])})'
     
     def __eq__(self, other: object) -> bool:
         return isinstance(other, VectorType) and self.ts == other.ts

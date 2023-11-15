@@ -35,14 +35,14 @@ class StructObject:
         self.members = members
 
 class FunctionObject:
-    def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode, input_datatype: DataType, output_datatype: DataType):
-        self.input_node = input_identifier_node
+    def __init__(self, input_identifier_nodes: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[DataType], output_datatype: DataType):
+        self.input_nodes = input_identifier_nodes
         self.output_node = expression_node
-        self.input_datatype = input_datatype
+        self.input_datatypes = input_datatypes
         self.output_datatype = output_datatype
 
     def __repr__(self) -> str:
-        return f'({self.input_node}: {self.input_datatype}) -> {self.output_datatype} => {self.output_node}'
+        return f'({self.input_nodes}: {self.input_datatypes}) -> {self.output_datatype} => {self.output_node}'
 
 # Value subclasses
 
@@ -105,8 +105,8 @@ class CharValue(Value):
         super().__init__(raw_char, CharType())
 
 class FunctionValue(Value):
-    def __init__(self, input_identifier_node: IdentifierNode, expression_node: ExpressionNode, input_datatype: DataType, output_datatype: DataType):
-        super().__init__(FunctionObject(input_identifier_node, expression_node, input_datatype, output_datatype), FunctionType(input_datatype, output_datatype))
+    def __init__(self, input_identifier_nodes: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[DataType], output_datatype: DataType):
+        super().__init__(FunctionObject(input_identifier_nodes, expression_node, input_datatypes, output_datatype), FunctionType(input_datatypes, output_datatype))
 
 class ArrayValue(Value):
     def __init__(self, raw_values: List[Value], datatype: DataType):
@@ -460,19 +460,22 @@ class GreaterThanOrEqualToNode(BinaryOperatorNode):
 # Function application
 
 # f x
-class FunctionApplicationNode(BinaryOperatorNode):
-    def __init__(self, function_node: ExpressionNode, input_node: ExpressionNode, context: Context):
-        super().__init__(function_node, input_node, '', context)
+class FunctionApplicationNode(ExpressionNode):
+    def __init__(self, function_node: ExpressionNode, input_nodes: List[ExpressionNode], context: Context):
+        super().__init__(context)
+
+        self.function_node = function_node
+        self.input_nodes = input_nodes
 
     def __repr__(self) -> str:
-        return f'{self.left_node}({self.right_node})'
+        return f'{self.function_node}({", ".join([str(input_node) for input_node in self.input_nodes])})'
 
     def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return FunctionApplicationNode(
-            self.left_node.sub(old_node, new_node),
-            self.right_node.sub(old_node, new_node),
+            self.function_node.sub(old_node, new_node),
+            [input_node.sub(old_node, new_node) for input_node in self.input_nodes],
             self.context)
     
 # Type cast node
@@ -735,29 +738,29 @@ class ItemNode(Node):
         super().__init__(context)
 
 class FunctionDefinitionNode(ItemNode):
-    def __init__(self, function_name: IdentifierNode, parameter_identifier: IdentifierNode, block_node: BlockExpressionNode, input_datatype: ExpressionNode, output_datatype: ExpressionNode, context: Context):
+    def __init__(self, function_name: IdentifierNode, parameter_identifiers: List[IdentifierNode], block_node: BlockExpressionNode, input_datatypes: List[ExpressionNode], output_datatype: ExpressionNode, context: Context):
         super().__init__(context)
         
         self.function_name = function_name
-        self.parameter_identifier = parameter_identifier
+        self.parameter_identifiers = parameter_identifiers
         self.block_node = block_node
-        self.input_datatype = input_datatype
+        self.input_datatypes = input_datatypes
         self.output_datatype = output_datatype
 
     def __eq__(self, other: object):
         if not isinstance(other, FunctionDefinitionNode):
             return False
-        return self.function_name == other.function_name and self.parameter_identifier == other.parameter_identifier and self.block_node == other.block_node
+        return self.function_name == other.function_name and self.parameter_identifiers == other.parameter_identifiers and self.block_node == other.block_node
     
     def __repr__(self):
-        return f'fn {self.function_name} ({self.parameter_identifier}: {self.input_datatype}) -> {self.output_datatype} {self.block_node}'
+        return f'fn {self.function_name} ({self.parameter_identifiers}: {self.input_datatypes}) -> {self.output_datatype} {self.block_node}'
 
     def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return IfExpressionNode(
             self.function_name.sub(old_node, new_node),
-            self.parameter_identifier.sub(old_node, new_node),
+            [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.parameter_identifiers],
             self.block_node.sub(old_node, new_node),
             self.context)
     
