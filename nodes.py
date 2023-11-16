@@ -63,7 +63,7 @@ class IntValue(Value):
             raise AttributeError()
         return IntValue(self.value + other.value)
     
-    def print(self):
+    def println(self):
         print(self.value)
 
 class FloatValue(Value):
@@ -75,7 +75,7 @@ class FloatValue(Value):
             raise AttributeError()
         return FloatValue(self.value + other.value)
     
-    def print(self):
+    def println(self):
         print(self.value)
 
 class BoolValue(Value):
@@ -94,7 +94,7 @@ class StringValue(Value):
             raise AttributeError()
         return StringValue(self.value + other.value)
     
-    def print(self):
+    def println(self):
         print(self.value)
 
 class CharValue(Value):

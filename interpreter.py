@@ -202,18 +202,18 @@ class Interpreter:
     def interpret_statement(self, node: StatementNode) -> Value:
         if isinstance(node, FunctionApplicationNode) \
             and isinstance(node.function_node, IdentifierNode) \
-            and node.function_node.identifier == 'print':
+            and node.function_node.identifier == 'println':
 
             if len(node.input_nodes) != 1:
-                raise ContextualError(f'expected 1 arg in print, received {len(node.input_nodes)}', node.context)
+                raise ContextualError(f'expected 1 arg in println, received {len(node.input_nodes)}', node.context)
 
             input_node = node.input_nodes[0]
             input_value = self.interpret(input_node)
 
             try:
-                input_value.print() # type: ignore
+                input_value.println() # type: ignore
             except AttributeError:
-                raise ContextualError(f'print is not implemented for {input_value.datatype}', node.context)
+                raise ContextualError(f'println is not implemented for {input_value.datatype}', node.context)
             
             return NullValue()
         if isinstance(node, ExpressionNode):
