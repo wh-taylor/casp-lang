@@ -8,7 +8,7 @@ WHITESPACE = ' \n\v\t\f\r\b'
 
 KEYWORDS = [
     'import', 'fn', 'struct', 'let', 'as', 'return', 'break', 'continue',
-    'Null', 'Int', 'Float', 'Bool', 'Str', 'Char', 'Type',
+    'Null', 'Int', 'Float', 'Bool', 'String', 'Char', 'Type',
 ]
 
 SYMBOLS = '()[]{}'
