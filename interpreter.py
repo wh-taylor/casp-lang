@@ -231,10 +231,8 @@ class Interpreter:
 def interpret(head_node: HeadNode):
     namespace_set = NamespaceSet()
     interpreter = Interpreter(namespace_set)
-    try:
-        interpreter.interpret_head(head_node)
-    except ContextualError as e:
-        print(e.get_context().highlight_context_line('^'), e)
+
+    interpreter.interpret_head(head_node)
 
     try:
         # Run main function if it exists
@@ -242,16 +240,12 @@ def interpret(head_node: HeadNode):
     except ValueError:
         return
     
-    try:
-        if not isinstance(function_value, FunctionValue):
-            raise ValueError('main definition is not a function')
-        
-        function_object = function_value.value
-        if not isinstance(function_object, FunctionObject):
-            raise ValueError('function value does not contain function object')
-        
-        expression_node = function_object.output_node
-        interpreter.interpret(expression_node)
-    except ContextualError as e:
-        # print(e.get_context().highlight_context_line('^'), e)
-        raise e
+    if not isinstance(function_value, FunctionValue):
+        raise ValueError('main definition is not a function')
+    
+    function_object = function_value.value
+    if not isinstance(function_object, FunctionObject):
+        raise ValueError('function value does not contain function object')
+    
+    expression_node = function_object.output_node
+    interpreter.interpret(expression_node)
