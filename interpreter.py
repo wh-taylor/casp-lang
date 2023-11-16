@@ -179,7 +179,7 @@ class Interpreter:
                     output_value = self.interpret(exit.node)
                     break
             else:
-                output_value = self.interpret(expression.expression) if expression is not None else NullValue()
+                output_value = self.interpret(expression.expression) if expression.expression is not None else NullValue()
         else:
             output_value = self.interpret(expression)
             
