@@ -38,6 +38,9 @@ class Token:
     
     def is_colon(self) -> bool:
         return self._is_symbol(':')
+    
+    def is_scoper(self) -> bool:
+        return self._is_symbol('::')
 
     def is_comma(self) -> bool:
         return self._is_symbol(',')

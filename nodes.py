@@ -268,6 +268,30 @@ class IdentifierNode(ExpressionNode):
         if not isinstance(other, IdentifierNode):
             return False
         return self.identifier == other.identifier
+    
+# x::y
+class ScopeNode(ExpressionNode):
+    def __init__(self, scope_node: ExpressionNode, reference_node: IdentifierNode, context: Context):
+        super().__init__(context)
+        
+        self.scope_node = scope_node
+        self.reference_node = reference_node
+
+    def __repr__(self) -> str:
+        return f'{self.scope_node}::{self.reference_node}'
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ScopeNode):
+            return False
+        return self.scope_node == other.scope_node and self.reference_node == other.reference_node
+
+    def sub(self, old_node, new_node):
+        if self == old_node:
+            return new_node
+        return DivisionNode(
+            self.scope_node.sub(old_node, new_node),
+            self.reference_node.sub(old_node, new_node),
+            self.context)
 
 # Operation nodes
 

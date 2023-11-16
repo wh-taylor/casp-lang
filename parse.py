@@ -16,6 +16,10 @@ class Parser:
         if type(self.get_token()) == EOFToken: return
         self.index += 1
 
+    def retract(self):
+        if self.index == 0: return
+        self.index -= 1
+
     def parse(self) -> HeadNode:
         items: List[ItemNode] = []
         while not self.get_token().is_eof():
@@ -198,12 +202,12 @@ class Parser:
         return left_node
     
     def parse_function_application(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_atom
+        parse_subprecedence = self.parse_scoper
         token = self.get_token()
-        if type(token) != IdentifierToken: return parse_subprecedence()
         self.iterate()
         if not self.is_index_valid() or not self.get_token().is_left_paren():
-            return IdentifierNode(token.text, token.context)
+            self.retract()
+            return parse_subprecedence()
         input_nodes: List[ExpressionNode] = []
         self.expect_symbol('(')
         self.iterate()
@@ -217,6 +221,26 @@ class Parser:
         else:
             self.iterate()
         return FunctionApplicationNode(IdentifierNode(token.text, token.context), input_nodes, token.context + input_nodes[-1].context if len(input_nodes) > 0 else token.context)
+    
+    def parse_scoper(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_identifier_as_expression
+        left_node = parse_subprecedence()
+        while self.is_index_valid():
+            if self.get_token().is_scoper():
+                self.iterate()
+                right_node = parse_subprecedence()
+                if not isinstance(right_node, IdentifierNode):
+                    raise ContextualError(f'expected identifier, received {right_node}', right_node.context)
+                left_node = ScopeNode(left_node, right_node, left_node.context + right_node.context)
+            else:
+                break
+        return left_node
+    
+    def parse_identifier_as_expression(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_atom
+        if type(self.get_token()) != IdentifierToken:
+            return parse_subprecedence()
+        return self.parse_identifier()
     
     def parse_atom(self) -> ExpressionNode:
         token = self.get_token()
@@ -261,7 +285,7 @@ class Parser:
         if token.is_Type():
             return DatatypeNode(DatatypeValue(DatatypeType()), token.context)
         
-        raise ContextualError('unhandled token', token.context)
+        raise ContextualError(f'unhandled token {token}', token.context)
 
     def parse_identifier(self):
         token = self.get_token()

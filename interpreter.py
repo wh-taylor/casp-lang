@@ -12,21 +12,22 @@ class Definition:
         self.value = defined_value
         self.datatype = datatype
 
-class Namespace:
+class Namespace(Value):
     def __init__(self):
-        self.definitions: List[Definition] = [] # type: ignore
+        super().__init__([], NamespaceType())
+        self.value: List[Definition] = [] # type: ignore
 
     def add_definition(self, definition: Definition):
-        self.definitions.append(definition)
+        self.value.append(definition)
 
     def get_value_by_identifier(self, identifier: IdentifierNode) -> Value:
-        for definition in self.definitions:
+        for definition in self.value:
             if definition.identifier == identifier:
                 return definition.value
         raise DefinitionError(f'no definition for {identifier.identifier} exists', identifier)
     
     def get_value_by_name(self, name: str) -> Value:
-        for definition in self.definitions:
+        for definition in self.value:
             if definition.identifier.identifier == name:
                 return definition.value
         raise ValueError(f'no definition that goes by {name} exists')
@@ -99,6 +100,8 @@ class Interpreter:
             return self.interpret_variable_declaration(node)
         if isinstance(node, FunctionApplicationNode):
             return self.interpret_function_application(node)
+        if isinstance(node, ScopeNode):
+            return self.interpret_scope(node)
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
     
     def interpret_identifier(self, node: IdentifierNode) -> Value:
@@ -184,6 +187,11 @@ class Interpreter:
 
         return output_value
 
+    def interpret_scope(self, node: ScopeNode) -> Value:
+        scope_value = self.interpret(node.scope_node)
+        if isinstance(scope_value, Namespace):
+            return scope_value.get_value_by_identifier(node.reference_node)
+        raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
     
     def interpret_statement(self, node: StatementNode) -> Value:
         if isinstance(node, FunctionApplicationNode) \

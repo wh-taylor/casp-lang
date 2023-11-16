@@ -8,6 +8,13 @@ def repr_ts(ts: List[str]) -> str:
 
 # Singleton types
 
+class NamespaceType:
+    def __repr__(self) -> str:
+        return 'Namespace'
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, NamespaceType)
+
 class NullType:
     def __repr__(self) -> str:
         return 'Null'
