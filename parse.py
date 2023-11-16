@@ -27,8 +27,22 @@ class Parser:
         return HeadNode(items, sum([item.context for item in items[1:]], start=items[0].context))
     
     def parse_item(self) -> ItemNode:
-        parse_subprecedence = self.parse_function_definition
+        parse_subprecedence = self.parse_import
         return parse_subprecedence()
+    
+    def parse_import(self) -> ItemNode:
+        parse_subprecedence = self.parse_function_definition
+        token = self.get_token()
+        if not token.is_import():
+            return parse_subprecedence()
+        self.iterate()
+        file_expression = self.parse_expression()
+        self.expect_symbol('as')
+        self.iterate()
+        identifier_node = self.parse_identifier()
+        self.expect_symbol(';')
+        self.iterate()
+        return ImportNode(file_expression, identifier_node, token.context + file_expression.context + identifier_node.context)
 
     def parse_function_definition(self) -> ItemNode:
         parse_subprecedence = None
@@ -203,11 +217,10 @@ class Parser:
     
     def parse_function_application(self) -> ExpressionNode:
         parse_subprecedence = self.parse_scoper
-        token = self.get_token()
-        self.iterate()
+        function_token = self.get_token()
+        function_node = parse_subprecedence()
         if not self.is_index_valid() or not self.get_token().is_left_paren():
-            self.retract()
-            return parse_subprecedence()
+            return function_node
         input_nodes: List[ExpressionNode] = []
         self.expect_symbol('(')
         self.iterate()
@@ -220,7 +233,7 @@ class Parser:
             self.iterate()
         else:
             self.iterate()
-        return FunctionApplicationNode(IdentifierNode(token.text, token.context), input_nodes, token.context + input_nodes[-1].context if len(input_nodes) > 0 else token.context)
+        return FunctionApplicationNode(function_node, input_nodes, function_token.context + input_nodes[-1].context if len(input_nodes) > 0 else function_token.context)
     
     def parse_scoper(self) -> ExpressionNode:
         parse_subprecedence = self.parse_identifier_as_expression

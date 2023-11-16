@@ -775,6 +775,30 @@ class ItemNode(Node):
     def __init__(self, context: Context):
         super().__init__(context)
 
+class ImportNode(ItemNode):
+    def __init__(self, file_name_node: ExpressionNode, identifier_node: IdentifierNode, context: Context):
+        super().__init__(context)
+
+        self.file_name_node = file_name_node
+        self.identifier_node = identifier_node
+
+    def __eq__(self, other: object):
+        if not isinstance(other, ImportNode):
+            return False
+        return self.file_name_node == other.file_name_node and self.identifier_node == other.identifier_node
+    
+    def __repr__(self):
+        return f'import {self.file_name_node} as {self.identifier_node}'
+
+    def sub(self, old_node, new_node):
+        if self == old_node:
+            return new_node
+        return IfExpressionNode(
+            self.function_name.sub(old_node, new_node),
+            [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.parameter_identifiers],
+            self.expression_node.sub(old_node, new_node),
+            self.context)
+
 class FunctionDefinitionNode(ItemNode):
     def __init__(self, function_name: IdentifierNode, parameter_identifiers: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[ExpressionNode], output_datatype: ExpressionNode, context: Context):
         super().__init__(context)

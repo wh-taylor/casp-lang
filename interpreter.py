@@ -1,4 +1,5 @@
 from parse import *
+from lex import lex
 
 class DefinitionError(Exception):
     def __init__(self, message: str, identifier: IdentifierNode):
@@ -83,6 +84,8 @@ class Interpreter:
         return NullValue()
     
     def interpret_item(self, node: ItemNode) -> Value:
+        if isinstance(node, ImportNode):
+            return self.interpret_import(node)
         if isinstance(node, FunctionDefinitionNode):
             return self.interpret_function_definition_node(node)
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
@@ -220,6 +223,27 @@ class Interpreter:
             raise ContinueExit()
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
 
+    def interpret_import(self, node: ImportNode) -> Value:
+        file_name_value = self.interpret(node.file_name_node)
+
+        if not isinstance(file_name_value, StringValue):
+            raise ContextualError(f'expected String, received {file_name_value.datatype}', node.file_name_node.context)
+
+        try:
+            with open(file_name_value.value) as f:
+                code = f.read()
+        except FileNotFoundError:
+            raise ContextualError(f'file {file_name_value.value} was not found', node.file_name_node.context)
+
+        tokens = lex(node.file_name_node, code)
+        head_node = parse(tokens)
+        interpreter = interpret(head_node)
+
+        namespace = interpreter.namespace_set.scopes[0]
+        self.namespace_set.add_definition(Definition(node.identifier_node, namespace, NamespaceType()))
+
+        return NullValue()
+
     def interpret_function_definition_node(self, node: FunctionDefinitionNode) -> Value:
         input_datatypes = [self.interpret_datatype(input_datatype) for input_datatype in node.input_datatypes]
         output_datatype = self.interpret_datatype(node.output_datatype)
@@ -236,7 +260,7 @@ class Interpreter:
             return FunctionType([self.interpret_datatype(input_datatype_node) for input_datatype_node in node.input_datatype_nodes], self.interpret_datatype(node.output_datatype_node))
         raise ContextualError(f'expected literal node, received {node}', node.context)
         
-def interpret(head_node: HeadNode):
+def interpret(head_node: HeadNode) -> Interpreter:
     namespace_set = NamespaceSet()
     interpreter = Interpreter(namespace_set)
 
@@ -246,7 +270,7 @@ def interpret(head_node: HeadNode):
         # Run main function if it exists
         function_value = namespace_set.get_value_by_name('main')
     except ValueError:
-        return
+        return interpreter
     
     if not isinstance(function_value, FunctionValue):
         raise ValueError('main definition is not a function')
@@ -257,3 +281,5 @@ def interpret(head_node: HeadNode):
     
     expression_node = function_object.output_node
     interpreter.interpret(expression_node)
+
+    return interpreter

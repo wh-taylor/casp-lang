@@ -78,6 +78,9 @@ class Token:
     def is_let(self) -> bool:
         return self._is_symbol('let')
     
+    def is_import(self) -> bool:
+        return self._is_symbol('import')
+    
     def is_fn(self) -> bool:
         return self._is_symbol('fn')
     

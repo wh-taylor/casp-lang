@@ -109,7 +109,7 @@ class NewType:
         return isinstance(other, NewType) and self.name == other.name
 
 DataType \
-    = NullType | IntType | FloatType | BoolType \
+    = NamespaceType | NullType | IntType | FloatType | BoolType \
     | StringType | CharType | DatatypeType \
     | FunctionType | ArrayType | VectorType \
     | NewType
