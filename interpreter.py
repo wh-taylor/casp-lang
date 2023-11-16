@@ -193,7 +193,10 @@ class Interpreter:
     def interpret_scope(self, node: ScopeNode) -> Value:
         scope_value = self.interpret(node.scope_node)
         if isinstance(scope_value, Namespace):
-            return scope_value.get_value_by_identifier(node.reference_node)
+            try:
+                return scope_value.get_value_by_identifier(node.reference_node)
+            except DefinitionError as e:
+                raise ContextualError(e.message, e.identifier.context)
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
     
     def interpret_statement(self, node: StatementNode) -> Value:
