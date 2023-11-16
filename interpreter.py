@@ -179,15 +179,13 @@ class Interpreter:
                     output_value = self.interpret(exit.node)
                     break
             else:
-                output_value = self.interpret(expression) if expression is not None else NullValue()
+                output_value = self.interpret(expression.expression) if expression is not None else NullValue()
         else:
             output_value = self.interpret(expression)
             
         self.namespace_set.drop_scope()
-
         if output_value.datatype != function_object.output_datatype:
             raise ContextualError(f'expected output type {function_object.output_datatype} received output type {output_value.datatype}', node.context)
-
         return output_value
 
     def interpret_scope(self, node: ScopeNode) -> Value:
