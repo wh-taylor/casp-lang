@@ -208,9 +208,9 @@ class Interpreter:
             input_node = node.input_nodes[0]
             input_value = self.interpret(input_node)
 
-            try:
-                input_value.println() # type: ignore
-            except AttributeError:
+            if hasattr(input_value, "println"):
+                input_value.println()
+            else:
                 raise ContextualError(f'println is not implemented for {input_value.datatype}', node.context)
             
             return NullValue()
