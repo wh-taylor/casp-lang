@@ -142,9 +142,9 @@ class Interpreter:
     def interpret_addition(self, node: AdditionNode) -> Value:
         left_value = self.interpret(node.left_node)
         right_value = self.interpret(node.right_node)
-        try:
-            return left_value + right_value # type: ignore
-        except AttributeError:
+        if hasattr(left_value, '__add__'):
+            return left_value + right_value
+        else:
             raise ContextualError(f'addition is not implemented for {left_value.datatype} and {right_value.datatype}', node.context)
         
     def interpret_function_application(self, node: FunctionApplicationNode) -> Value:
