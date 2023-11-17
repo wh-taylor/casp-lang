@@ -76,7 +76,7 @@ class IntValue(Value):
     def __truediv__(self, other: object) -> IntValue:
         if not isinstance(other, IntValue):
             raise AttributeError()
-        return IntValue(self.value / other.value)
+        return FloatValue(self.value / other.value)
     
     def println(self):
         print(self.value)
