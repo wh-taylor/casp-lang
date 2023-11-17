@@ -63,6 +63,21 @@ class IntValue(Value):
             raise AttributeError()
         return IntValue(self.value + other.value)
     
+    def __sub__(self, other: object) -> IntValue:
+        if not isinstance(other, IntValue):
+            raise AttributeError()
+        return IntValue(self.value - other.value)
+    
+    def __mul__(self, other: object) -> IntValue:
+        if not isinstance(other, IntValue):
+            raise AttributeError()
+        return IntValue(self.value * other.value)
+    
+    def __truediv__(self, other: object) -> IntValue:
+        if not isinstance(other, IntValue):
+            raise AttributeError()
+        return IntValue(self.value / other.value)
+    
     def println(self):
         print(self.value)
 
@@ -74,6 +89,21 @@ class FloatValue(Value):
         if not isinstance(other, FloatValue):
             raise AttributeError()
         return FloatValue(self.value + other.value)
+    
+    def __sub__(self, other: object) -> FloatValue:
+        if not isinstance(other, FloatValue):
+            raise AttributeError()
+        return FloatValue(self.value - other.value)
+    
+    def __mul__(self, other: object) -> FloatValue:
+        if not isinstance(other, FloatValue):
+            raise AttributeError()
+        return FloatValue(self.value * other.value)
+    
+    def __truediv__(self, other: object) -> FloatValue:
+        if not isinstance(other, FloatValue):
+            raise AttributeError()
+        return FloatValue(self.value / other.value)
     
     def println(self):
         print(self.value)

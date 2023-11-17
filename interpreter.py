@@ -119,6 +119,12 @@ class Interpreter:
     def interpret_binary_operator(self, node: BinaryOperatorNode) -> Value:
         if isinstance(node, AdditionNode):
             return self.interpret_addition(node)
+        if isinstance(node, SubtractionNode):
+            return self.interpret_subtraction(node)
+        if isinstance(node, MultiplicationNode):
+            return self.interpret_multiplication(node)
+        if isinstance(node, DivisionNode):
+            return self.interpret_division(node)
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
 
     def interpret_block(self, node: BlockExpressionNode) -> Value:
@@ -146,6 +152,30 @@ class Interpreter:
             return left_value + right_value
         else:
             raise ContextualError(f'addition is not implemented for {left_value.datatype} and {right_value.datatype}', node.context)
+    
+    def interpret_subtraction(self, node: SubtractionNode) -> Value:
+        left_value = self.interpret(node.left_node)
+        right_value = self.interpret(node.right_node)
+        if hasattr(left_value, '__sub__'):
+            return left_value - right_value
+        else:
+            raise ContextualError(f'subtraction is not implemented for {left_value.datatype} and {right_value.datatype}', node.context)
+    
+    def interpret_multiplication(self, node: MultiplicationNode) -> Value:
+        left_value = self.interpret(node.left_node)
+        right_value = self.interpret(node.right_node)
+        if hasattr(left_value, '__mul__'):
+            return left_value * right_value
+        else:
+            raise ContextualError(f'multiplication is not implemented for {left_value.datatype} and {right_value.datatype}', node.context)
+        
+    def interpret_division(self, node: DivisionNode) -> Value:
+        left_value = self.interpret(node.left_node)
+        right_value = self.interpret(node.right_node)
+        if hasattr(left_value, '__truediv__'):
+            return left_value / right_value
+        else:
+            raise ContextualError(f'division is not implemented for {left_value.datatype} and {right_value.datatype}', node.context)
         
     def interpret_function_application(self, node: FunctionApplicationNode) -> Value:
         function_value = self.interpret(node.function_node)
