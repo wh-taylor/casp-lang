@@ -235,8 +235,8 @@ class Interpreter:
                 code = f.read()
         except FileNotFoundError:
             raise ContextualError(f'file {file_name_value.value} was not found', node.file_name_node.context)
-
-        tokens = lex(node.file_name_node, code)
+        
+        tokens = lex(file_name_value.value, code)
         head_node = parse(tokens)
         interpreter = interpret(head_node)
 
