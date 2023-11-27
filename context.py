@@ -35,7 +35,7 @@ class Context:
     def highlight_context_line(self, char: str) -> str:
         line = self._get_line()
         l0 = f' --> {self._file}\n' + ' ' * int(len(str(line))) + ' |'
-        l1 = f'{line} | {self._get_context_line()}'
+        l1 = f'{line+1} | {self._get_context_line()}'
         l2 = ' ' * int(len(str(line))) + ' | ' + ' ' * (self._get_init_column() - 1) + char * self._get_context_width()
 
         return l0 + '\n' + l1 + '\n' + l2
