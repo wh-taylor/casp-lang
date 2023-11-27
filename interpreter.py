@@ -199,7 +199,7 @@ class Interpreter:
             self.namespace_set.add_definition(Definition(input_node, input_value, function_object.input_datatypes[i]))
 
             if input_value.datatype != function_object.input_datatypes[i]:
-                raise ContextualError(f'expected output type {function_object.input_datatypes[i]} received output type {input_value.datatype}', input_node.context)
+                raise ContextualError(f'expected output type {function_object.input_datatypes[i]} received output type {input_value.datatype}', node.input_nodes[i].context)
         
         if isinstance(expression, BlockExpressionNode):
             for statement in expression.statements:
