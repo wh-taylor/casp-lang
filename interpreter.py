@@ -352,6 +352,9 @@ class Interpreter:
                 if isinstance(datatype_value, DatatypeValue):
                     return datatype_value.value
             raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
+        datatype_value = self.interpret(node)
+        if isinstance(datatype_value, DatatypeValue):
+            return datatype_value.value
         raise ContextualError(f'expected datatype node, received {node}', node.context)
         
 def interpret(head_node: HeadNode) -> Interpreter:
