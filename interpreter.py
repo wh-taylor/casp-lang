@@ -270,9 +270,11 @@ class Interpreter:
         else:
             output_value = self.interpret(expression)
             
-        self.namespace_set.drop_scope()
         if output_value.datatype != self.interpret_datatype(function_object.output_datatype):
             raise ContextualError(f'expected output type {function_object.output_datatype} received output type {output_value.datatype}', node.context)
+        
+        self.namespace_set.drop_scope()
+
         return output_value
 
     def interpret_scope(self, node: ScopeNode) -> Value:
