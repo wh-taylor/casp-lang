@@ -145,10 +145,8 @@ class Interpreter:
     
     def interpret_anonymous_struct_definition_node(self, node: AnonymousStructDefinitionNode) -> Value:
         member_datatypes = [self.interpret_datatype(member_datatype) for member_datatype in node.member_datatypes]
-        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, member_datatypes)
-        definition = Definition(node.struct_name, DatatypeValue(struct_type), DatatypeType())
-        self.namespace_set.add_definition(definition)
-        return NullValue()
+        struct_type = AnonymousType(node.member_identifiers, member_datatypes)
+        return DatatypeValue(struct_type)
 
     def interpret_block(self, node: BlockExpressionNode) -> Value:
         for statement in node.statements:
@@ -215,8 +213,9 @@ class Interpreter:
         if not isinstance(constructed_datatype, DatatypeValue):
             raise ContextualError(f'expected datatype, received {constructed_datatype}', node.datatype_node.context)
 
-        if not isinstance(constructed_datatype.value, NewType):
+        if not isinstance(constructed_datatype.value, NewType) and not isinstance(constructed_datatype.value, AnonymousType):
             raise ContextualError(f'non-literal datatype {constructed_datatype.datatype} does not have a constructor', node.datatype_node.context)
+        
         datatype = constructed_datatype.value
         member_ids = node.member_ids
         member_value_nodes = node.member_value_nodes

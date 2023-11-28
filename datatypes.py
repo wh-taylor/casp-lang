@@ -60,7 +60,7 @@ class CharType:
     
 class DatatypeType:
     def __repr__(self) -> str:
-        return 'Datatype'
+        return 'Type'
     
     def __eq__(self, other: object) -> bool:
         return isinstance(other, DatatypeType)
@@ -107,6 +107,18 @@ class NewType:
 
     def __repr__(self) -> str:
         return self.name
+    
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, NewType) and self.name == other.name and list(self.member_names) == list(other.member_names) and list(self.member_ts) == list(other.member_ts)
+    
+@dataclass
+class AnonymousType:
+    member_names: List[nodes.IdentifierNode]
+    member_ts: List[DataType]
+
+    def __repr__(self) -> str:
+        repr_members = ', '.join([f'{member_name}: {member_t}' for member_name, member_t in zip(self.member_names, self.member_ts)])
+        return f'struct {{{repr_members}}}'
     
     def __eq__(self, other: object) -> bool:
         return isinstance(other, NewType) and self.name == other.name and list(self.member_names) == list(other.member_names) and list(self.member_ts) == list(other.member_ts)
