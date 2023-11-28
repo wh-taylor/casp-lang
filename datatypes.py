@@ -121,7 +121,7 @@ class AnonymousType:
         return f'struct {{{repr_members}}}'
     
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, NewType) and self.name == other.name and list(self.member_names) == list(other.member_names) and list(self.member_ts) == list(other.member_ts)
+        return isinstance(other, AnonymousType) and list(self.member_names) == list(other.member_names) and list(self.member_ts) == list(other.member_ts)
 
 DataType \
     = NamespaceType | NullType | IntType | FloatType | BoolType \
