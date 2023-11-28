@@ -8,7 +8,7 @@ class DefinitionError(Exception):
         self.identifier = identifier
 
 class Definition:
-    def __init__(self, identifier: IdentifierNode, defined_value: Value, datatype: DataType):
+    def __init__(self, identifier: IdentifierNode, defined_value: Value, datatype: ExpressionNode):
         self.identifier = identifier
         self.value = defined_value
         self.datatype = datatype
@@ -138,14 +138,11 @@ class Interpreter:
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
 
     def interpret_anonymous_function_definition_node(self, node: AnonymousFunctionDefinitionNode) -> Value:
-        input_datatypes = [self.interpret_datatype(input_datatype) for input_datatype in node.input_datatypes]
-        output_datatype = self.interpret_datatype(node.output_datatype)
-        function_value = FunctionValue(node.parameter_identifiers, node.expression_node, input_datatypes, output_datatype)
+        function_value = FunctionValue(node.parameter_identifiers, node.expression_node, node.input_datatypes, node.output_datatype)
         return function_value
     
     def interpret_anonymous_struct_definition_node(self, node: AnonymousStructDefinitionNode) -> Value:
-        member_datatypes = [self.interpret_datatype(member_datatype) for member_datatype in node.member_datatypes]
-        struct_type = AnonymousType(node.member_identifiers, member_datatypes)
+        struct_type = AnonymousType(node.member_identifiers, node.member_datatypes)
         return DatatypeValue(struct_type)
 
     def interpret_block(self, node: BlockExpressionNode) -> Value:
@@ -162,7 +159,7 @@ class Interpreter:
         datatype = self.interpret_datatype(node.datatype)
         if value.datatype != datatype:
             raise ContextualError(f'expected type {datatype} received type {value.datatype}', node.expression.context)
-        definition = Definition(node.identifier, value, datatype)
+        definition = Definition(node.identifier, value, node.datatype)
         self.namespace_set.add_definition(definition)
         return NullValue()
     
@@ -253,11 +250,13 @@ class Interpreter:
         self.namespace_set.add_scope()
 
         for i, input_node in enumerate(function_object.input_nodes):
-            input_value = self.interpret(node.input_nodes[i])
-            self.namespace_set.add_definition(Definition(input_node, input_value, function_object.input_datatypes[i]))
+            received_input_value = self.interpret(node.input_nodes[i])
+            self.namespace_set.add_definition(Definition(input_node, received_input_value, function_object.input_datatypes[i]))
 
-            if input_value.datatype != function_object.input_datatypes[i]:
-                raise ContextualError(f'expected output type {function_object.input_datatypes[i]} received output type {input_value.datatype}', node.input_nodes[i].context)
+            expected_input_value = self.interpret_datatype(function_object.input_datatypes[i])
+
+            if received_input_value.datatype != expected_input_value:
+                raise ContextualError(f'expected output type {function_object.input_datatypes[i]} received output type {received_input_value.datatype}', node.input_nodes[i].context)
         
         if isinstance(expression, BlockExpressionNode):
             for statement in expression.statements:
@@ -272,7 +271,7 @@ class Interpreter:
             output_value = self.interpret(expression)
             
         self.namespace_set.drop_scope()
-        if output_value.datatype != function_object.output_datatype:
+        if output_value.datatype != self.interpret_datatype(function_object.output_datatype):
             raise ContextualError(f'expected output type {function_object.output_datatype} received output type {output_value.datatype}', node.context)
         return output_value
 
@@ -329,23 +328,20 @@ class Interpreter:
         interpreter = interpret(head_node)
 
         namespace = interpreter.namespace_set.scopes[0]
-        self.namespace_set.add_definition(Definition(node.identifier_node, namespace, NamespaceType()))
+        self.namespace_set.add_definition(Definition(node.identifier_node, namespace, DatatypeNode(DatatypeValue(NamespaceType()), node.context)))
 
         return NullValue()
 
     def interpret_function_definition_node(self, node: FunctionDefinitionNode) -> Value:
-        input_datatypes = [self.interpret_datatype(input_datatype) for input_datatype in node.input_datatypes]
-        output_datatype = self.interpret_datatype(node.output_datatype)
-        function_value = FunctionValue(node.parameter_identifiers, node.expression_node, input_datatypes, output_datatype)
-        function_type = FunctionType(input_datatypes, output_datatype)
-        definition = Definition(node.function_name, function_value, function_type)
+        function_value = FunctionValue(node.parameter_identifiers, node.expression_node, node.input_datatypes, node.output_datatype)
+        function_type = FunctionType(node.input_datatypes, node.output_datatype)
+        definition = Definition(node.function_name, function_value, DatatypeNode(DatatypeValue(function_type), node.context))
         self.namespace_set.add_definition(definition)
         return NullValue()
     
     def interpret_struct_definition_node(self, node: StructDefinitionNode) -> Value:
-        member_datatypes = [self.interpret_datatype(member_datatype) for member_datatype in node.member_datatypes]
-        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, member_datatypes)
-        definition = Definition(node.struct_name, DatatypeValue(struct_type), DatatypeType())
+        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, node.member_datatypes)
+        definition = Definition(node.struct_name, DatatypeValue(struct_type), DatatypeNode(DatatypeValue(DatatypeType()), node.context))
         self.namespace_set.add_definition(definition)
         return NullValue()
 
@@ -353,7 +349,7 @@ class Interpreter:
         if isinstance(node, DatatypeNode):
             return node.value.value
         if isinstance(node, FunctionDatatypeNode):
-            return FunctionType([self.interpret_datatype(input_datatype_node) for input_datatype_node in node.input_datatype_nodes], self.interpret_datatype(node.output_datatype_node))
+            return FunctionType(node.input_datatype_nodes, node.output_datatype_node)
         if isinstance(node, IdentifierNode):
             datatype_value = self.namespace_set.get_value_by_identifier(node)
             if isinstance(datatype_value, DatatypeValue):

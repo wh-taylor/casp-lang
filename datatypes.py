@@ -69,8 +69,8 @@ class DatatypeType:
     
 @dataclass
 class FunctionType:
-    xts: List[DataType]
-    yt: DataType
+    xts: List[nodes.ExpressionNode]
+    yt: nodes.ExpressionNode
 
     def __repr__(self) -> str:
         repr_xts = [f'({xt})' if type(xt) == FunctionType else repr(xt) for xt in self.xts]
@@ -81,7 +81,7 @@ class FunctionType:
     
 @dataclass
 class ArrayType:
-    t: DataType
+    t: nodes.ExpressionNode
 
     def __repr__(self) -> str:
         return f'[{self.t}]'
@@ -91,7 +91,7 @@ class ArrayType:
 
 @dataclass
 class VectorType:
-    ts: List[DataType]
+    ts: List[nodes.ExpressionNode]
 
     def __repr__(self) -> str:
         return f'({repr_ts([repr(t) for t in self.ts])})'
@@ -103,7 +103,7 @@ class VectorType:
 class NewType:
     name: str
     member_names: List[nodes.IdentifierNode]
-    member_ts: List[DataType]
+    member_ts: List[nodes.ExpressionNode]
 
     def __repr__(self) -> str:
         return self.name
@@ -114,7 +114,7 @@ class NewType:
 @dataclass
 class AnonymousType:
     member_names: List[nodes.IdentifierNode]
-    member_ts: List[DataType]
+    member_ts: List[nodes.ExpressionNode]
 
     def __repr__(self) -> str:
         repr_members = ', '.join([f'{member_name}: {member_t}' for member_name, member_t in zip(self.member_names, self.member_ts)])

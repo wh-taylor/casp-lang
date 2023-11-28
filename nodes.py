@@ -25,7 +25,7 @@ class Value:
 # Value objects    
 
 class StructMemberObject:
-    def __init__(self, identifier: IdentifierNode, datatype: DataType, value: Value):
+    def __init__(self, identifier: IdentifierNode, datatype: ExpressionNode, value: Value):
         self.identifier = identifier
         self.datatype = datatype
         self.value = value
@@ -35,7 +35,7 @@ class StructObject:
         self.members = members
 
 class FunctionObject:
-    def __init__(self, input_identifier_nodes: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[DataType], output_datatype: DataType):
+    def __init__(self, input_identifier_nodes: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[ExpressionNode], output_datatype: ExpressionNode):
         self.input_nodes = input_identifier_nodes
         self.output_node = expression_node
         self.input_datatypes = input_datatypes
@@ -135,15 +135,15 @@ class CharValue(Value):
         super().__init__(raw_char, CharType())
 
 class FunctionValue(Value):
-    def __init__(self, input_identifier_nodes: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[DataType], output_datatype: DataType):
+    def __init__(self, input_identifier_nodes: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[ExpressionNode], output_datatype: ExpressionNode):
         super().__init__(FunctionObject(input_identifier_nodes, expression_node, input_datatypes, output_datatype), FunctionType(input_datatypes, output_datatype))
 
 class ArrayValue(Value):
-    def __init__(self, raw_values: List[Value], datatype: DataType):
+    def __init__(self, raw_values: List[Value], datatype: ExpressionNode):
         super().__init__(raw_values, ArrayType(datatype))
 
 class VectorValue(Value):
-    def __init__(self, raw_values: List[Value], datatypes: List[DataType]):
+    def __init__(self, raw_values: List[Value], datatypes: List[ExpressionNode]):
         # Raise an error if there are too few values.
         if len(raw_values) < len(datatypes):
             raise ValueError('too few values in vector')
