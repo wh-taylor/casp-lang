@@ -101,6 +101,8 @@ class Interpreter:
             return self.interpret_binary_operator(node)
         if isinstance(node, BlockExpressionNode):
             return self.interpret_block(node)
+        if isinstance(node, AnonymousFunctionDefinitionNode):
+            return self.interpret_anonymous_function_definition_node(node)
         if isinstance(node, VariableDeclarationNode):
             return self.interpret_variable_declaration(node)
         if isinstance(node, ConstructorNode):
@@ -132,6 +134,12 @@ class Interpreter:
         if isinstance(node, DivisionNode):
             return self.interpret_division(node)
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
+
+    def interpret_anonymous_function_definition_node(self, node: FunctionDefinitionNode) -> Value:
+        input_datatypes = [self.interpret_datatype(input_datatype) for input_datatype in node.input_datatypes]
+        output_datatype = self.interpret_datatype(node.output_datatype)
+        function_value = FunctionValue(node.parameter_identifiers, node.expression_node, input_datatypes, output_datatype)
+        return function_value
 
     def interpret_block(self, node: BlockExpressionNode) -> Value:
         for statement in node.statements:

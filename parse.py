@@ -192,7 +192,41 @@ class Parser:
         return BlockExpressionNode(statements, expression, init_context + final_context)
 
     def parse_expression(self) -> ExpressionNode:
-        return self.parse_block_as_expression()
+        return self.parse_anonymous_function_definition()
+    
+    def parse_anonymous_function_definition(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_block_as_expression
+        token = self.get_token()
+        if not token.is_fn():
+            return parse_subprecedence()
+        self.iterate()
+        
+        parameter_names = []
+        parameter_datatypes = []
+
+        # Parse parameter `(parameter: datatype)`
+        while self.get_token().is_left_paren():
+            self.iterate()
+            parameter_names.append(self.parse_identifier())
+            self.expect_symbol(':')
+            self.iterate()
+            parameter_datatypes.append(self.parse_expression())
+            self.expect_symbol(')')
+            self.iterate()
+        self.expect_symbol('->')
+        self.iterate()
+        return_datatype_name = self.parse_expression()
+
+        self.expect_symbol('{', '=')
+        if self.get_token().is_left_brace():
+            expr = self.parse_block_as_expression()
+        elif self.get_token().is_eq():
+            self.iterate()
+            expr = self.parse_expression()
+            self.expect_symbol(';')
+            self.iterate()
+
+        return AnonymousFunctionDefinitionNode(parameter_names, expr, parameter_datatypes, return_datatype_name, token.context + expr.context)
     
     def parse_block_as_expression(self) -> ExpressionNode:
         parse_subprecedence = self.parse_function_datatype

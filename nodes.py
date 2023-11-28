@@ -840,6 +840,31 @@ class LoopExpressionNode(ExpressionNode):
         return IfExpressionNode(
             self.block.sub(old_node, new_node),
             self.context)
+    
+class AnonymousFunctionDefinitionNode(ExpressionNode):
+    def __init__(self, parameter_identifiers: List[IdentifierNode], expression_node: ExpressionNode, input_datatypes: List[ExpressionNode], output_datatype: ExpressionNode, context: Context):
+        super().__init__(context)
+        
+        self.parameter_identifiers = parameter_identifiers
+        self.expression_node = expression_node
+        self.input_datatypes = input_datatypes
+        self.output_datatype = output_datatype
+
+    def __eq__(self, other: object):
+        if not isinstance(other, FunctionDefinitionNode):
+            return False
+        return self.parameter_identifiers == other.parameter_identifiers and self.expression_node == other.expression_node
+    
+    def __repr__(self):
+        return f'fn ({self.parameter_identifiers}: {self.input_datatypes}) -> {self.output_datatype} {self.expression_node}'
+
+    def sub(self, old_node, new_node):
+        if self == old_node:
+            return new_node
+        return FunctionDefinitionNode(
+            [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.parameter_identifiers],
+            self.expression_node.sub(old_node, new_node),
+            self.context)
 
 # Items
 
