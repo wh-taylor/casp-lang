@@ -342,6 +342,16 @@ class Interpreter:
             datatype_value = self.namespace_set.get_value_by_identifier(node)
             if isinstance(datatype_value, DatatypeValue):
                 return datatype_value.value
+        if isinstance(node, ScopeNode):
+            scope_value = self.interpret(node.scope_node)
+            if isinstance(scope_value, Namespace):
+                try:
+                    datatype_value = scope_value.get_value_by_identifier(node.reference_node)
+                except DefinitionError as e:
+                    raise ContextualError(e.message, e.identifier.context)
+                if isinstance(datatype_value, DatatypeValue):
+                    return datatype_value.value
+            raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
         raise ContextualError(f'expected datatype node, received {node}', node.context)
         
 def interpret(head_node: HeadNode) -> Interpreter:
