@@ -103,6 +103,8 @@ class Interpreter:
             return self.interpret_block(node)
         if isinstance(node, AnonymousFunctionDefinitionNode):
             return self.interpret_anonymous_function_definition_node(node)
+        if isinstance(node, AnonymousStructDefinitionNode):
+            return self.interpret_anonymous_struct_definition_node(node)
         if isinstance(node, VariableDeclarationNode):
             return self.interpret_variable_declaration(node)
         if isinstance(node, ConstructorNode):
@@ -135,11 +137,18 @@ class Interpreter:
             return self.interpret_division(node)
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
 
-    def interpret_anonymous_function_definition_node(self, node: FunctionDefinitionNode) -> Value:
+    def interpret_anonymous_function_definition_node(self, node: AnonymousFunctionDefinitionNode) -> Value:
         input_datatypes = [self.interpret_datatype(input_datatype) for input_datatype in node.input_datatypes]
         output_datatype = self.interpret_datatype(node.output_datatype)
         function_value = FunctionValue(node.parameter_identifiers, node.expression_node, input_datatypes, output_datatype)
         return function_value
+    
+    def interpret_anonymous_struct_definition_node(self, node: AnonymousStructDefinitionNode) -> Value:
+        member_datatypes = [self.interpret_datatype(member_datatype) for member_datatype in node.member_datatypes]
+        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, member_datatypes)
+        definition = Definition(node.struct_name, DatatypeValue(struct_type), DatatypeType())
+        self.namespace_set.add_definition(definition)
+        return NullValue()
 
     def interpret_block(self, node: BlockExpressionNode) -> Value:
         for statement in node.statements:

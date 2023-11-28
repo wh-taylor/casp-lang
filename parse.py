@@ -195,7 +195,7 @@ class Parser:
         return self.parse_anonymous_function_definition()
     
     def parse_anonymous_function_definition(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_block_as_expression
+        parse_subprecedence = self.parse_anonymous_struct
         token = self.get_token()
         if not token.is_fn():
             return parse_subprecedence()
@@ -228,6 +228,36 @@ class Parser:
 
         return AnonymousFunctionDefinitionNode(parameter_names, expr, parameter_datatypes, return_datatype_name, token.context + expr.context)
     
+    def parse_anonymous_struct(self) -> ItemNode:
+        parse_subprecedence = self.parse_block_as_expression
+        token = self.get_token()
+        if not token.is_struct():
+            return parse_subprecedence()
+        self.iterate()
+
+        member_names: List[IdentifierNode] = []
+        member_datatypes: List[ExpressionNode] = []
+
+        if self.get_token().is_semicolon():
+            raise ContextualError('anonymous struct must have members', self.get_token().context)
+
+        self.expect_symbol('{')
+        self.iterate()
+        
+        while not self.get_token().is_right_brace():
+            member_names.append(self.parse_identifier())
+            self.expect_symbol(':')
+            self.iterate()
+            member_datatypes.append(self.parse_expression())
+            self.expect_symbol(',')
+            self.iterate()
+
+        self.expect_symbol('}')
+        last_context = self.get_token().context
+        self.iterate()
+
+        return AnonymousStructDefinitionNode(member_names, member_datatypes, token.context + last_context)
+
     def parse_block_as_expression(self) -> ExpressionNode:
         parse_subprecedence = self.parse_function_datatype
         if not self.get_token().is_left_brace(): return parse_subprecedence()

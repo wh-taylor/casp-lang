@@ -865,6 +865,29 @@ class AnonymousFunctionDefinitionNode(ExpressionNode):
             [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.parameter_identifiers],
             self.expression_node.sub(old_node, new_node),
             self.context)
+    
+class AnonymousStructDefinitionNode(ExpressionNode):
+    def __init__(self, member_identifiers: List[IdentifierNode], member_datatypes: List[ExpressionNode], context: Context):
+        super().__init__(context)
+        
+        self.member_identifiers = member_identifiers
+        self.member_datatypes = member_datatypes
+
+    def __eq__(self, other: object):
+        if not isinstance(other, StructDefinitionNode):
+            return False
+        return self.member_identifiers == other.member_identifiers and self.member_datatypes == other.member_datatypes
+    
+    def __repr__(self):
+        return f'struct {{{self.member_identifiers}: {self.member_datatypes}}}'
+
+    def sub(self, old_node, new_node):
+        if self == old_node:
+            return new_node
+        return StructDefinitionNode(
+            [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.member_identifiers],
+            [parameter_datatype.sub(old_node, new_node) for parameter_datatype in self.member_datatypes],
+            self.context)
 
 # Items
 
@@ -945,7 +968,7 @@ class StructDefinitionNode(ItemNode):
         return StructDefinitionNode(
             self.struct_name.sub(old_node, new_node),
             [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.member_identifiers],
-            self.expression_node.sub(old_node, new_node),
+            [parameter_datatype.sub(old_node, new_node) for parameter_datatype in self.member_datatypes],
             self.context)
     
 # Head
