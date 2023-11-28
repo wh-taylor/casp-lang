@@ -201,6 +201,11 @@ class Parser:
     
     def parse_function_datatype(self) -> ExpressionNode:
         parse_subprecedence = self.parse_addition_and_subtraction
+        if self.get_token().is_right_arrow():
+            arrow_token = self.get_token()
+            self.iterate()
+            right_node = self.parse_function_datatype()
+            return FunctionDatatypeNode([], right_node, arrow_token.context + right_node.context)
         sub_node = parse_subprecedence()
         left_node = [sub_node]
         while self.is_index_valid():
