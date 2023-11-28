@@ -7,7 +7,7 @@ DIGITS = '0123456789'
 WHITESPACE = ' \n\v\t\f\r\b'
 
 KEYWORDS = [
-    'import', 'fn', 'struct', 'let', 'as', 'return', 'break', 'continue',
+    'import', 'fn', 'struct', 'let', 'new', 'as', 'return', 'break', 'continue',
     'Null', 'Int', 'Float', 'Bool', 'String', 'Char', 'Type',
 ]
 

@@ -88,6 +88,8 @@ class Interpreter:
             return self.interpret_import(node)
         if isinstance(node, FunctionDefinitionNode):
             return self.interpret_function_definition_node(node)
+        if isinstance(node, StructDefinitionNode):
+            return self.interpret_struct_definition_node(node)
         raise ContextualError(f'interpretation of node {node}: {type(node)} is unimplemented', node.context)
 
     def interpret_expression(self, node: ExpressionNode) -> Value:
@@ -101,6 +103,10 @@ class Interpreter:
             return self.interpret_block(node)
         if isinstance(node, VariableDeclarationNode):
             return self.interpret_variable_declaration(node)
+        if isinstance(node, ConstructorNode):
+            return self.interpret_constructor(node)
+        if isinstance(node, MemberAccessNode):
+            return self.interpret_member_access(node)
         if isinstance(node, FunctionApplicationNode):
             return self.interpret_function_application(node)
         if isinstance(node, ScopeNode):
@@ -177,15 +183,51 @@ class Interpreter:
         else:
             raise ContextualError(f'division is not implemented for {left_value.datatype} and {right_value.datatype}', node.context)
         
-    def interpret_function_application(self, node: FunctionApplicationNode) -> Value:
-        function_value = self.interpret(node.function_node)
-
-        if not isinstance(function_value, FunctionValue):
-            raise ContextualError(f'expected function, received {function_value}', node.function_node.context)
+    def interpret_member_access(self, node: MemberAccessNode) -> Value:
+        struct = self.interpret(node.struct_node)
+        if not isinstance(struct, StructValue) or not isinstance(struct.value, StructObject):
+            raise ContextualError(f'member access must source from a struct, not {struct.datatype}', node.context)
+        for member in struct.value.members:
+            if member.identifier == node.member_node:
+                return member.value
+        raise ContextualError(f'struct {struct.datatype} does not have member called {node.member_node}', node.context)
         
-        function_object = function_value.value
+    def interpret_constructor(self, node: ConstructorNode) -> Value:
+        constructed_datatype = self.interpret(node.datatype_node)
+        
+        if not isinstance(constructed_datatype, DatatypeValue):
+            raise ContextualError(f'expected datatype, received {constructed_datatype}', node.datatype_node.context)
+
+        if not isinstance(constructed_datatype.value, NewType):
+            raise ContextualError(f'non-literal datatype {constructed_datatype.datatype} does not have a constructor', node.datatype_node.context)
+        datatype = constructed_datatype.value
+        member_ids = node.member_ids
+        member_value_nodes = node.member_value_nodes
+        member_names = constructed_datatype.value.member_names
+        member_ts = constructed_datatype.value.member_ts
+        members: List[StructMemberObject] = []
+
+        for expected_member_id, received_member_id in zip(member_ids, constructed_datatype.value.member_names):
+            if expected_member_id != received_member_id:
+                raise ContextualError(f'expected {expected_member_id} member, receieved {received_member_id}', received_member_id.context)
+
+        if len(member_value_nodes) != len(member_names):
+            raise ContextualError(f'expected {len(member_names)} members, received {len(member_value_nodes)}', node.context)
+
+        for input_node, member_name, member_t in zip(member_value_nodes, member_names, member_ts):
+            members.append(StructMemberObject(member_name, member_t, self.interpret(input_node)))
+        
+        return StructValue(members, datatype)
+
+    def interpret_function_application(self, node: FunctionApplicationNode) -> Value:
+        called_value = self.interpret(node.function_node)
+
+        if not isinstance(called_value, FunctionValue):
+            raise ContextualError(f'expected function, received {called_value}', node.function_node.context)
+        
+        function_object = called_value.value
         if not isinstance(function_object, FunctionObject):
-            raise ContextualError(f'function value {function_value} does not contain function object', node.function_node.context)
+            raise ContextualError(f'function value {called_value} does not contain function object', node.function_node.context)
 
         expression = function_object.output_node
 
@@ -283,13 +325,24 @@ class Interpreter:
         definition = Definition(node.function_name, function_value, function_type)
         self.namespace_set.add_definition(definition)
         return NullValue()
+    
+    def interpret_struct_definition_node(self, node: StructDefinitionNode) -> Value:
+        member_datatypes = [self.interpret_datatype(member_datatype) for member_datatype in node.member_datatypes]
+        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, member_datatypes)
+        definition = Definition(node.struct_name, DatatypeValue(struct_type), DatatypeType())
+        self.namespace_set.add_definition(definition)
+        return NullValue()
 
     def interpret_datatype(self, node: ExpressionNode) -> DataType:
         if isinstance(node, DatatypeNode):
             return node.value.value
         if isinstance(node, FunctionDatatypeNode):
             return FunctionType([self.interpret_datatype(input_datatype_node) for input_datatype_node in node.input_datatype_nodes], self.interpret_datatype(node.output_datatype_node))
-        raise ContextualError(f'expected literal node, received {node}', node.context)
+        if isinstance(node, IdentifierNode):
+            datatype_value = self.namespace_set.get_value_by_identifier(node)
+            if isinstance(datatype_value, DatatypeValue):
+                return datatype_value.value
+        raise ContextualError(f'expected datatype node, received {node}', node.context)
         
 def interpret(head_node: HeadNode) -> Interpreter:
     namespace_set = NamespaceSet()

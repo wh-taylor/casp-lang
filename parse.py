@@ -45,15 +45,15 @@ class Parser:
         return ImportNode(file_expression, identifier_node, token.context + file_expression.context + identifier_node.context)
 
     def parse_function_definition(self) -> ItemNode:
-        parse_subprecedence = None
+        parse_subprecedence = self.parse_struct
         token = self.get_token()
         if not token.is_fn():
-            raise ContextualError('expected fn', token.context)
+            return parse_subprecedence()
         self.iterate()
         function_name = self.parse_identifier()
         
         parameter_names = []
-        parameter_datatypes = []\
+        parameter_datatypes = []
 
         # Parse parameter `(parameter: datatype)`
         while self.get_token().is_left_paren():
@@ -79,6 +79,39 @@ class Parser:
 
         return FunctionDefinitionNode(function_name, parameter_names, expr, parameter_datatypes, return_datatype_name, function_name.context + expr.context)
     
+    def parse_struct(self) -> ItemNode:
+        parse_subprecedence = None
+        token = self.get_token()
+        if not token.is_struct():
+            raise ContextualError(f'expected import, fn, or struct, received {token}', token.context)
+        self.iterate()
+        struct_name = self.parse_identifier()
+
+        member_names: List[IdentifierNode] = []
+        member_datatypes: List[ExpressionNode] = []
+
+        if self.get_token().is_semicolon():
+            last_context = self.get_token().context
+            self.iterate()
+            return StructDefinitionNode(struct_name, member_names, member_datatypes, struct_name.context + last_context)
+
+        self.expect_symbol('{')
+        self.iterate()
+        
+        while not self.get_token().is_right_brace():
+            member_names.append(self.parse_identifier())
+            self.expect_symbol(':')
+            self.iterate()
+            member_datatypes.append(self.parse_expression())
+            self.expect_symbol(',')
+            self.iterate()
+
+        self.expect_symbol('}')
+        last_context = self.get_token().context
+        self.iterate()
+
+        return StructDefinitionNode(struct_name, member_names, member_datatypes, struct_name.context + last_context)
+
     def parse_statement(self) -> StatementNode:
         parse_subprecedence = self.parse_return
         statement = parse_subprecedence()
@@ -200,7 +233,7 @@ class Parser:
         return left_node
     
     def parse_multiplication_and_division(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_function_application
+        parse_subprecedence = self.parse_member_access
         left_node = parse_subprecedence()
         while self.is_index_valid():
             if self.get_token().is_mul():
@@ -214,6 +247,44 @@ class Parser:
             else:
                 break
         return left_node
+    
+    def parse_member_access(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_constructor
+        left_node = parse_subprecedence()
+        while self.is_index_valid():
+            if self.get_token().is_dot():
+                self.iterate()
+                right_node = self.parse_identifier()
+                left_node = MemberAccessNode(left_node, right_node, left_node.context + right_node.context)
+            else:
+                break
+        return left_node
+    
+    def parse_constructor(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_function_application
+        if not self.get_token().is_new():
+            return parse_subprecedence()
+        kw_new_token = self.get_token()
+        self.iterate()
+        datatype_node = parse_subprecedence()
+        if not self.is_index_valid() or not self.get_token().is_left_brace():
+            raise ContextualError('expected {', self.get_token().context)
+        member_ids: List[IdentifierNode] = []
+        member_value_nodes: List[ExpressionNode] = []
+        self.expect_symbol('{')
+        self.iterate()
+        while not self.get_token().is_right_brace():
+            member_ids.append(self.parse_identifier())
+            self.expect_symbol(':')
+            self.iterate()
+            member_value_nodes.append(self.parse_expression())
+            self.expect_symbol('}', ',')
+            if self.get_token().is_right_brace():
+                break
+            if self.get_token().is_comma():
+                self.iterate()
+        self.iterate()
+        return ConstructorNode(datatype_node, member_ids, member_value_nodes, kw_new_token.context + member_value_nodes[-1].context if len(member_value_nodes) > 0 else kw_new_token.context)
     
     def parse_function_application(self) -> ExpressionNode:
         parse_subprecedence = self.parse_scoper
@@ -241,9 +312,7 @@ class Parser:
         while self.is_index_valid():
             if self.get_token().is_scoper():
                 self.iterate()
-                right_node = parse_subprecedence()
-                if not isinstance(right_node, IdentifierNode):
-                    raise ContextualError(f'expected identifier, received {right_node}', right_node.context)
+                right_node = self.parse_identifier()
                 left_node = ScopeNode(left_node, right_node, left_node.context + right_node.context)
             else:
                 break

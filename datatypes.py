@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing_extensions import List
+import nodes
 
 # Returns a comma-separated string of datatypes in a list
 def repr_ts(ts: List[str]) -> str:
@@ -101,12 +102,14 @@ class VectorType:
 @dataclass
 class NewType:
     name: str
+    member_names: List[nodes.IdentifierNode]
+    member_ts: List[DataType]
 
     def __repr__(self) -> str:
         return self.name
     
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, NewType) and self.name == other.name
+        return isinstance(other, NewType) and self.name == other.name and list(self.member_names) == list(other.member_names) and list(self.member_ts) == list(other.member_ts)
 
 DataType \
     = NamespaceType | NullType | IntType | FloatType | BoolType \

@@ -73,7 +73,7 @@ class IntValue(Value):
             raise AttributeError()
         return IntValue(self.value * other.value)
     
-    def __truediv__(self, other: object) -> IntValue:
+    def __truediv__(self, other: object) -> FloatValue:
         if not isinstance(other, IntValue):
             raise AttributeError()
         return FloatValue(self.value / other.value)
@@ -166,6 +166,9 @@ class VectorValue(Value):
 class StructValue(Value):
     def __init__(self, members: List[StructMemberObject], struct_type: DataType):
         super().__init__(StructObject(members), struct_type)
+    
+    def println(self):
+        print(f'{self.datatype} ' + '{ ' + ', '.join([f'{member.identifier}: {member.value}' for member in self.value.members]) +' }')
 
 # Value exits
 
@@ -525,9 +528,48 @@ class GreaterThanOrEqualToNode(BinaryOperatorNode):
             self.right_node.sub(old_node, new_node),
             self.context)
 
-# Function application
+# x.y
+class MemberAccessNode(ExpressionNode):
+    def __init__(self, struct_node: ExpressionNode, member_node: IdentifierNode, context: Context):
+        super().__init__(context)
 
-# f x
+        self.struct_node = struct_node
+        self.member_node = member_node
+
+    def __repr__(self) -> str:
+        return f'{self.struct_node}.{self.member_node}'
+
+    def sub(self, old_node, new_node):
+        if self == old_node:
+            return new_node
+        return MemberAccessNode(
+            self.struct_node.sub(old_node, new_node),
+            self.member_node.sub(old_node, new_node),
+            self.context)
+
+# t { m: v, ... }
+class ConstructorNode(ExpressionNode):
+    def __init__(self, datatype_node: ExpressionNode, member_ids: List[IdentifierNode], member_value_nodes: List[ExpressionNode], context: Context):
+        super().__init__(context)
+
+        self.datatype_node = datatype_node
+        self.member_ids = member_ids
+        self.member_value_nodes = member_value_nodes
+
+    def __repr__(self) -> str:
+        a = ", ".join([f'{member_id}: {member_value_node}' for member_id, member_value_node in zip(self.member_ids, self.member_value_nodes)])
+        return f'{self.datatype_node} {{{a}}}'
+
+    def sub(self, old_node, new_node):
+        if self == old_node:
+            return new_node
+        return ConstructorNode(
+            self.datatype_node.sub(old_node, new_node),
+            [member_id.sub(old_node, new_node) for member_id in self.member_ids],
+            [member_value_node.sub(old_node, new_node) for member_value_node in self.member_value_nodes],
+            self.context)
+
+# f(x, ...)
 class FunctionApplicationNode(ExpressionNode):
     def __init__(self, function_node: ExpressionNode, input_nodes: List[ExpressionNode], context: Context):
         super().__init__(context)
@@ -850,9 +892,34 @@ class FunctionDefinitionNode(ItemNode):
     def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
-        return IfExpressionNode(
+        return FunctionDefinitionNode(
             self.function_name.sub(old_node, new_node),
             [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.parameter_identifiers],
+            self.expression_node.sub(old_node, new_node),
+            self.context)
+    
+class StructDefinitionNode(ItemNode):
+    def __init__(self, struct_name: IdentifierNode, member_identifiers: List[IdentifierNode], member_datatypes: List[ExpressionNode], context: Context):
+        super().__init__(context)
+        
+        self.struct_name = struct_name
+        self.member_identifiers = member_identifiers
+        self.member_datatypes = member_datatypes
+
+    def __eq__(self, other: object):
+        if not isinstance(other, StructDefinitionNode):
+            return False
+        return self.struct_name == other.struct_name and self.member_identifiers == other.member_identifiers and self.member_datatypes == other.member_datatypes
+    
+    def __repr__(self):
+        return f'struct {self.struct_name} {{{self.member_identifiers}: {self.member_datatypes}}}'
+
+    def sub(self, old_node, new_node):
+        if self == old_node:
+            return new_node
+        return StructDefinitionNode(
+            self.struct_name.sub(old_node, new_node),
+            [parameter_identifier.sub(old_node, new_node) for parameter_identifier in self.member_identifiers],
             self.expression_node.sub(old_node, new_node),
             self.context)
     

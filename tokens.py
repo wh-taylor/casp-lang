@@ -45,6 +45,9 @@ class Token:
     def is_comma(self) -> bool:
         return self._is_symbol(',')
     
+    def is_dot(self) -> bool:
+        return self._is_symbol('.')
+    
     def is_right_arrow(self) -> bool:
         return self._is_symbol('->')
     
@@ -83,6 +86,12 @@ class Token:
     
     def is_fn(self) -> bool:
         return self._is_symbol('fn')
+    
+    def is_struct(self) -> bool:
+        return self._is_symbol('struct')
+    
+    def is_new(self) -> bool:
+        return self._is_symbol('new')
     
     def is_Null(self) -> bool:
         return self._is_symbol('Null')
