@@ -357,7 +357,7 @@ class Parser:
 
         return AnonymousFunctionDefinitionNode(parameter_names, expr, parameter_datatypes, return_datatype_name, token.context + expr.context)
     
-    def parse_anonymous_struct(self) -> ItemNode:
+    def parse_anonymous_struct(self) -> ExpressionNode:
         parse_subprecedence = self.parse_identifier_as_expression
         token = self.get_token()
         if not token.is_struct():

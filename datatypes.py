@@ -127,4 +127,4 @@ DataType \
     = NamespaceType | NullType | IntType | FloatType | BoolType \
     | StringType | CharType | DatatypeType \
     | FunctionType | ArrayType | VectorType \
-    | NewType
+    | NewType | AnonymousType
