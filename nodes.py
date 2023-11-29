@@ -325,6 +325,27 @@ class ScopeNode(ExpressionNode):
             self.scope_node.sub(old_node, new_node),
             self.reference_node.sub(old_node, new_node),
             self.context)
+    
+# x.y
+class MemberAccessNode(ExpressionNode):
+    def __init__(self, struct_node: ExpressionNode, member_node: IdentifierNode, context: Context):
+        super().__init__(context)
+
+        self.struct_node = struct_node
+        self.member_node = member_node
+
+    def __repr__(self) -> str:
+        return f'{self.struct_node}.{self.member_node}'
+
+    def sub(self, old_node, new_node):
+        if self == old_node:
+            return new_node
+        return MemberAccessNode(
+            self.struct_node.sub(old_node, new_node),
+            self.member_node.sub(old_node, new_node),
+            self.context)
+    
+LocatorNode = IdentifierNode | ScopeNode | MemberAccessNode
 
 # Operation nodes
 
@@ -528,25 +549,6 @@ class GreaterThanOrEqualToNode(BinaryOperatorNode):
             self.right_node.sub(old_node, new_node),
             self.context)
 
-# x.y
-class MemberAccessNode(ExpressionNode):
-    def __init__(self, struct_node: ExpressionNode, member_node: IdentifierNode, context: Context):
-        super().__init__(context)
-
-        self.struct_node = struct_node
-        self.member_node = member_node
-
-    def __repr__(self) -> str:
-        return f'{self.struct_node}.{self.member_node}'
-
-    def sub(self, old_node, new_node):
-        if self == old_node:
-            return new_node
-        return MemberAccessNode(
-            self.struct_node.sub(old_node, new_node),
-            self.member_node.sub(old_node, new_node),
-            self.context)
-
 # t { m: v, ... }
 class ConstructorNode(ExpressionNode):
     def __init__(self, datatype_node: ExpressionNode, member_ids: List[IdentifierNode], member_value_nodes: List[ExpressionNode], context: Context):
@@ -677,25 +679,25 @@ class VariableDeclarationNode(ExpressionNode):
             self.context)
 
 class VariableReassignmentNode(ExpressionNode):
-    def __init__(self, identifier: IdentifierNode, expression: ExpressionNode, context: Context):
+    def __init__(self, locator: LocatorNode, expression: ExpressionNode, context: Context):
         super().__init__(context)
 
-        self.identifier = identifier
+        self.locator = locator
         self.expression = expression
 
     def __repr__(self) -> str:
-        return f'{self.identifier} = {self.expression}'
+        return f'{self.locator} = {self.expression}'
     
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, VariableReassignmentNode):
             return False
-        return self.identifier == other.identifier and self.expression == other.expression
+        return self.locator == other.locator and self.expression == other.expression
     
     def sub(self, old_node, new_node):
         if self == old_node:
             return new_node
         return VariableReassignmentNode(
-            self.identifier.sub(old_node, new_node),
+            self.locator.sub(old_node, new_node),
             self.expression.sub(old_node, new_node),
             self.context)
 

@@ -27,6 +27,13 @@ class Namespace(Value):
                 return definition.value
         raise DefinitionError(f'no definition for {identifier.identifier} exists', identifier)
     
+    def edit_value_by_identifier(self, identifier: IdentifierNode, value: Value) -> Value:
+        for definition in self.value:
+            if definition.identifier == identifier:
+                definition.value = value
+                return definition.value
+        raise DefinitionError(f'no definition for {identifier.identifier} exists', identifier)
+    
     def get_value_by_name(self, name: str) -> Value:
         for definition in self.value:
             if definition.identifier.identifier == name:
@@ -53,6 +60,14 @@ class NamespaceSet:
         for scope in reversed(self.scopes):
             try:
                 return scope.get_value_by_identifier(identifier)
+            except DefinitionError:
+                continue
+        raise DefinitionError(f'no definition for {identifier.identifier} exists', identifier)
+    
+    def edit_value_by_identifier(self, identifier: IdentifierNode, value: Value) -> Value:
+        for scope in reversed(self.scopes):
+            try:
+                return scope.edit_value_by_identifier(identifier, value)
             except DefinitionError:
                 continue
         raise DefinitionError(f'no definition for {identifier.identifier} exists', identifier)
@@ -107,6 +122,8 @@ class Interpreter:
             return self.interpret_anonymous_struct_definition_node(node)
         if isinstance(node, VariableDeclarationNode):
             return self.interpret_variable_declaration(node)
+        if isinstance(node, VariableReassignmentNode):
+            return self.interpret_variable_reassignment(node)
         if isinstance(node, ConstructorNode):
             return self.interpret_constructor(node)
         if isinstance(node, MemberAccessNode):
@@ -161,6 +178,26 @@ class Interpreter:
             raise ContextualError(f'expected type {datatype} received type {value.datatype}', node.expression.context)
         definition = Definition(node.identifier, value, node.datatype)
         self.namespace_set.add_definition(definition)
+        return NullValue()
+
+    def interpret_variable_reassignment(self, node: VariableReassignmentNode) -> Value:
+        value = self.interpret(node.expression)
+        if isinstance(node.locator, IdentifierNode):
+            self.namespace_set.edit_value_by_identifier(node.locator, value)
+        if isinstance(node.locator, ScopeNode):
+            scope_value = self.interpret(node.locator.scope_node)
+            if isinstance(scope_value, Namespace):
+                try:
+                    scope_value.edit_value_by_identifier(node.locator.reference_node, value)
+                except DefinitionError as e:
+                    raise ContextualError(e.message, e.identifier.context)
+        if isinstance(node.locator, MemberAccessNode):
+            struct = self.interpret(node.locator.struct_node)
+            if not isinstance(struct, StructValue) or not isinstance(struct.value, StructObject):
+                raise ContextualError(f'member access must source from a struct, not {struct.datatype}', node.context)
+            for member in struct.value.members:
+                if member.identifier == node.locator.member_node:
+                    member.value = value
         return NullValue()
     
     def interpret_addition(self, node: AdditionNode) -> Value:
@@ -349,9 +386,12 @@ class Interpreter:
         return NullValue()
     
     def interpret_struct_definition_node(self, node: StructDefinitionNode) -> Value:
-        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, [self.interpret_datatype(t) for t in node.member_datatypes])
+        member_ts: List[DataType] = []
+        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, member_ts)
         definition = Definition(node.struct_name, DatatypeValue(struct_type), DatatypeNode(DatatypeValue(DatatypeType()), node.context))
         self.namespace_set.add_definition(definition)
+        for t in node.member_datatypes:
+            member_ts.append(self.interpret_datatype(t))
         return NullValue()
 
     def interpret_datatype(self, node: ExpressionNode) -> DataType:

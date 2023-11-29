@@ -1,5 +1,6 @@
 from nodes import *
 from context import ContextualError
+from typing import get_args
 
 class Parser:
     def __init__(self, tokens: List[Token]):
@@ -164,8 +165,8 @@ class Parser:
             return left_node
         self.iterate()
         right_node = self.parse_expression()
-        if type(left_node) != IdentifierNode:
-            raise ContextualError('expected identifier', left_node.context)
+        if not isinstance(left_node, get_args(LocatorNode)):
+            raise ContextualError(f'expected locator, received {type(left_node)}', left_node.context)
         return VariableReassignmentNode(left_node, right_node, left_node.context + right_node.context)
     
     def parse_block(self) -> BlockExpressionNode:
