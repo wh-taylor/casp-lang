@@ -25,7 +25,7 @@ class Value:
 # Value objects    
 
 class StructMemberObject:
-    def __init__(self, identifier: IdentifierNode, datatype: ExpressionNode, value: Value):
+    def __init__(self, identifier: IdentifierNode, datatype: DataType, value: Value):
         self.identifier = identifier
         self.datatype = datatype
         self.value = value

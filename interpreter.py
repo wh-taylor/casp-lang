@@ -142,7 +142,7 @@ class Interpreter:
         return function_value
     
     def interpret_anonymous_struct_definition_node(self, node: AnonymousStructDefinitionNode) -> Value:
-        struct_type = AnonymousType(node.member_identifiers, node.member_datatypes)
+        struct_type = AnonymousType(node.member_identifiers, [self.interpret_datatype(t) for t in node.member_datatypes])
         return DatatypeValue(struct_type)
 
     def interpret_block(self, node: BlockExpressionNode) -> Value:
@@ -223,12 +223,19 @@ class Interpreter:
         for expected_member_id, received_member_id in zip(member_ids, constructed_datatype.value.member_names):
             if expected_member_id != received_member_id:
                 raise ContextualError(f'expected {expected_member_id} member, receieved {received_member_id}', received_member_id.context)
+        
+        for expected_member_t, received_member_t in zip(member_ts, constructed_datatype.value.member_ts):
+            if expected_member_t != received_member_t:
+                raise ContextualError(f'expected {expected_member_t} member, receieved {received_member_t}', node.datatype_node.context)
 
         if len(member_value_nodes) != len(member_names):
             raise ContextualError(f'expected {len(member_names)} members, received {len(member_value_nodes)}', node.context)
 
         for input_node, member_name, member_t in zip(member_value_nodes, member_names, member_ts):
-            members.append(StructMemberObject(member_name, member_t, self.interpret(input_node)))
+            value = self.interpret(input_node)
+            if member_t != value.datatype:
+                raise ContextualError(f'expected {member_t} member, receieved {value.datatype}', input_node.context)
+            members.append(StructMemberObject(member_name, member_t, value))
         
         return StructValue(members, datatype)
 
@@ -256,7 +263,7 @@ class Interpreter:
             expected_input_value = self.interpret_datatype(function_object.input_datatypes[i])
 
             if received_input_value.datatype != expected_input_value:
-                raise ContextualError(f'expected output type {function_object.input_datatypes[i]} received output type {received_input_value.datatype}', node.input_nodes[i].context)
+                raise ContextualError(f'expected output type {expected_input_value} received output type {received_input_value.datatype}', node.input_nodes[i].context)
         
         if isinstance(expression, BlockExpressionNode):
             for statement in expression.statements:
@@ -342,7 +349,7 @@ class Interpreter:
         return NullValue()
     
     def interpret_struct_definition_node(self, node: StructDefinitionNode) -> Value:
-        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, node.member_datatypes)
+        struct_type = NewType(node.struct_name.identifier, node.member_identifiers, [self.interpret_datatype(t) for t in node.member_datatypes])
         definition = Definition(node.struct_name, DatatypeValue(struct_type), DatatypeNode(DatatypeValue(DatatypeType()), node.context))
         self.namespace_set.add_definition(definition)
         return NullValue()

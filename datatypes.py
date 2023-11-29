@@ -103,7 +103,7 @@ class VectorType:
 class NewType:
     name: str
     member_names: List[nodes.IdentifierNode]
-    member_ts: List[nodes.ExpressionNode]
+    member_ts: List[DataType]
 
     def __repr__(self) -> str:
         return self.name
@@ -114,7 +114,7 @@ class NewType:
 @dataclass
 class AnonymousType:
     member_names: List[nodes.IdentifierNode]
-    member_ts: List[nodes.ExpressionNode]
+    member_ts: List[DataType]
 
     def __repr__(self) -> str:
         repr_members = ', '.join([f'{member_name}: {member_t}' for member_name, member_t in zip(self.member_names, self.member_ts)])
