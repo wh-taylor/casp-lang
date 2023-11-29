@@ -238,7 +238,7 @@ class Parser:
         return left_node
     
     def parse_multiplication_and_division(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_member_access
+        parse_subprecedence = self.parse_function_application
         left_node = parse_subprecedence()
         while self.is_index_valid():
             if self.get_token().is_mul():
@@ -253,6 +253,26 @@ class Parser:
                 break
         return left_node
     
+    def parse_function_application(self) -> ExpressionNode:
+        parse_subprecedence = self.parse_member_access
+        function_token = self.get_token()
+        function_node = parse_subprecedence()
+        if not self.is_index_valid() or not self.get_token().is_left_paren():
+            return function_node
+        input_nodes: List[ExpressionNode] = []
+        self.expect_symbol('(')
+        self.iterate()
+        if not self.get_token().is_right_paren():
+            input_nodes.append(self.parse_expression())
+            while self.get_token().is_comma():
+                self.iterate()
+                input_nodes.append(self.parse_expression())
+            self.expect_symbol(')')
+            self.iterate()
+        else:
+            self.iterate()
+        return FunctionApplicationNode(function_node, input_nodes, function_token.context + input_nodes[-1].context if len(input_nodes) > 0 else function_token.context)
+    
     def parse_member_access(self) -> ExpressionNode:
         parse_subprecedence = self.parse_constructor
         left_node = parse_subprecedence()
@@ -266,7 +286,7 @@ class Parser:
         return left_node
     
     def parse_constructor(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_function_application
+        parse_subprecedence = self.parse_scoper
         if not self.get_token().is_new():
             return parse_subprecedence()
         kw_new_token = self.get_token()
@@ -290,26 +310,6 @@ class Parser:
                 self.iterate()
         self.iterate()
         return ConstructorNode(datatype_node, member_ids, member_value_nodes, kw_new_token.context + member_value_nodes[-1].context if len(member_value_nodes) > 0 else kw_new_token.context)
-    
-    def parse_function_application(self) -> ExpressionNode:
-        parse_subprecedence = self.parse_scoper
-        function_token = self.get_token()
-        function_node = parse_subprecedence()
-        if not self.is_index_valid() or not self.get_token().is_left_paren():
-            return function_node
-        input_nodes: List[ExpressionNode] = []
-        self.expect_symbol('(')
-        self.iterate()
-        if not self.get_token().is_right_paren():
-            input_nodes.append(self.parse_expression())
-            while self.get_token().is_comma():
-                self.iterate()
-                input_nodes.append(self.parse_expression())
-            self.expect_symbol(')')
-            self.iterate()
-        else:
-            self.iterate()
-        return FunctionApplicationNode(function_node, input_nodes, function_token.context + input_nodes[-1].context if len(input_nodes) > 0 else function_token.context)
     
     def parse_scoper(self) -> ExpressionNode:
         parse_subprecedence = self.parse_anonymous_function_definition
